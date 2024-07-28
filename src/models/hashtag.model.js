@@ -8,10 +8,12 @@ const hashtagSchema = new mongoose.Schema(
       trim: true,
       unique: true,
     },
-    countOfTweets: {
-      type: Number,
-      default: 0,
-    },
+    tweets: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tweet",
+      },
+    ],
   },
   { timestamps: true }
 );

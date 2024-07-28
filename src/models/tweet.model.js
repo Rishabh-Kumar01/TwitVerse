@@ -14,6 +14,10 @@ const tweetSchema = new mongoose.Schema(
         ref: "Hashtag",
       },
     ],
+    countOfLikes: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

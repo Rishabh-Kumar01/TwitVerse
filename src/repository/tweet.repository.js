@@ -9,9 +9,11 @@ class TweetRepository {
   }
 
   async createTweet(data) {
-    return Tweet.create({
+    console.log(data);
+    const tweet = await Tweet.create({
       content: data.content,
     });
+    return tweet;
   }
 
   async getTweetById(id) {
@@ -22,8 +24,17 @@ class TweetRepository {
     return Tweet.findAll();
   }
 
-  async updateTweet(id, tweet) {
-    return Tweet.update(tweet, { where: { id } });
+  async updateTweet(id, data) {
+    const tweet = await Tweet.findOneAndUpdate(
+      {
+        _id: id,
+      },
+      {
+        hashtags: data.hashtags,
+      },
+      { new: true }
+    );
+    return tweet;
   }
 
   async deleteTweet(id) {

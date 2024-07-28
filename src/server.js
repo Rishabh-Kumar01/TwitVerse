@@ -1,28 +1,28 @@
-const utils = require("./utils/index.util");
-const config = require("./config/index.config");
-const routes = require("./routes/index.route");
+const {
+  express,
+  morgan,
+  compression,
+  helmet,
+  cors,
+} = require("./utils/imports.util");
+const { serverConfig, connection } = require("./config/index.config");
 
-const app = utils.imports.express();
+const app = express();
 
-// Middlewares
-app.use(utils.imports.morgan("dev"));
-app.use(utils.imports.cors());
-app.use(utils.imports.helmet());
-app.use(utils.imports.compression());
-app.use(utils.imports.express.json());
+app.use(morgan("dev"));
+app.use(cors());
+app.use(helmet());
+app.use(compression());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Server
-const setupAndStartServer = () => {
-  app.listen(config.serverConfig.PORT, async () => {
-    console.log(`SERVER IS RUNNING ON PORT ${config.serverConfig.PORT}`);
-    await config.connection();
-  });
+const serverStart = async () => {
+  console.log(`SERVER IS RUNNING ON PORT ${serverConfig.PORT}`);
+  await connection();
 };
 
-// Call the function to start the server
-setupAndStartServer();
+serverStart();
 
-// Home Route
 app.get("/", (request, response) => {
   response.send("Hello Server!!!😊😊😊😊");
 });

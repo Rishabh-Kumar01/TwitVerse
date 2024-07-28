@@ -9,7 +9,8 @@ class HashtagRepository {
   }
 
   async createHashtags(data) {
-    const hashtags = Hashtag.insertMany(data);
+    console.log(data);
+    const hashtags = await Hashtag.insertMany(data);
     return hashtags;
   }
 
@@ -17,16 +18,23 @@ class HashtagRepository {
     return Hashtag.findById(id);
   }
 
-  async getHashtags() {
-    return Hashtag.find();
+  async getHashtags(data) {
+    return await Hashtag.find({
+      name: { $in: data },
+    });
   }
 
-  async updateHashtag(id, hashtag) {
-    return Hashtag.updateOne({ _id: id }, hashtag);
-  }
-
-  async deleteHashtag(id) {
-    return Hashtag.deleteOne({ _id: id });
+  async updateHashTags(ids, data) {
+    const hashtags = await Hashtag.updateMany(
+      {
+        _id: { $in: ids },
+      },
+      {
+        $push: { tweets: data.tweet },
+      },
+      { new: true }
+    );
+    return hashtags;
   }
 }
 

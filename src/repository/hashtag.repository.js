@@ -9,7 +9,6 @@ class HashtagRepository {
   }
 
   async createHashtags(data) {
-    console.log(data);
     const hashtags = await Hashtag.insertMany(data);
     return hashtags;
   }

@@ -1,4 +1,4 @@
-import { mongoose } from "../utils/imports.util";
+import { mongoose } from "../utils/imports.util.js";
 
 const tweetSchema = new mongoose.Schema(
   {

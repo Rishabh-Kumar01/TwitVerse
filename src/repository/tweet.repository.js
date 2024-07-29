@@ -1,4 +1,4 @@
-const { Tweet } = require("../models/index");
+import { Tweet } from "../models/index.js";
 
 class TweetRepository {
   static getInstance() {
@@ -42,4 +42,4 @@ class TweetRepository {
   }
 }
 
-module.exports = TweetRepository;
+export default TweetRepository;

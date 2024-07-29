@@ -1,10 +1,19 @@
-module.exports = {
-  mongoose: require("mongoose"),
-  morgan: require("morgan"),
-  helmet: require("helmet"),
-  cors: require("cors"),
-  express: require("express"),
-  compression: require("compression"),
-  expressValidator: require("express-validator"),
-  dotenv: require("dotenv"),
+import dotenv from "dotenv";
+import express from "express";
+import mongoose from "mongoose";
+import morgan from "morgan";
+import helmet from "helmet";
+import cors from "cors";
+import compression from "compression";
+import expressValidator from "express-validator";
+
+export {
+  mongoose,
+  morgan,
+  helmet,
+  cors,
+  express,
+  compression,
+  expressValidator,
+  dotenv,
 };

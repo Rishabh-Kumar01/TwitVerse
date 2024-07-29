@@ -1,11 +1,11 @@
-const {
+import {
   express,
   morgan,
   compression,
   helmet,
   cors,
-} = require("./utils/imports.util");
-const { serverConfig, connection } = require("./config/index.config");
+} from "./utils/imports.util.js";
+import { serverConfig, connection } from "./config/index.config.js";
 
 const app = express();
 
@@ -26,5 +26,3 @@ serverStart();
 app.get("/", (request, response) => {
   response.send("Hello Server!!!😊😊😊😊");
 });
-
-module.exports = app;

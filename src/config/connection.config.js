@@ -1,7 +1,7 @@
-const { mongoose } = require("../utils/imports.util");
-const serverConfig = require("./serverConfig");
+import { mongoose } from "../utils/imports.util.js";
+import { serverConfig } from "./serverConfig.js";
 
-module.exports = () =>
+export default () =>
   mongoose
     .connect(serverConfig.DATABASE_URL)
     .then(() =>

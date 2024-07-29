@@ -1,7 +1,7 @@
-const {
+import {
   TweetRepository,
   HashtagRepository,
-} = require("../repository/index.repository");
+} from "../repository/index.repository.js";
 
 class TweetService {
   constructor() {
@@ -19,24 +19,25 @@ class TweetService {
   async createTweet(data) {
     // Separate HashTags from the content
     const content = data.content;
-    const hashtags = content.match(/#[0-9a-zA-Z_]+/g);
-    const tags = hashtags.map((tag) => tag.substring(1));
+    const hashtags = content
+      .match(/#[0-9a-zA-Z_]+/g)
+      .map((tag) => tag.substring(1));
 
     // Create the tweet
     const tweet = await this.tweetRepository.createTweet({ content: content });
 
     // Get the Existed Hashtags
-    const existedHashtags = await this.hashtagRepository.getHashtags(tags);
+    const existedHashtags = await this.hashtagRepository.getHashtags(hashtags);
 
-    // Update the existed hashtags with the new tweet id
+    // Update the existed hashtags with the new tweet id and not requirement to wait for the result
     const existedHashtagsNames = existedHashtags.map((tag) => tag.name);
     const existedHashtagsIds = existedHashtags.map((tag) => tag._id);
-    await this.hashtagRepository.updateHashTags(existedHashtagsIds, {
+    this.hashtagRepository.updateHashTags(existedHashtagsIds, {
       tweet: tweet._id,
     });
 
     // Create the new hashtags with the new tweet id
-    const newHashtags = tags.filter(
+    const newHashtags = hashtags.filter(
       (tag) => !existedHashtagsNames.includes(tag)
     );
     const newHashtagsObjects = newHashtags.map((tag) => ({
@@ -73,4 +74,4 @@ class TweetService {
   }
 }
 
-module.exports = TweetService;
+export default TweetService;

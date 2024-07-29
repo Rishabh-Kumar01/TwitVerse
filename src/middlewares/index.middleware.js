@@ -1,3 +1,1 @@
-module.exports = {
-  validator: require("./validator.middleware"),
-};
+export { validator };

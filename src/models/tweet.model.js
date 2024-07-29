@@ -1,4 +1,4 @@
-const { mongoose } = require("../utils/imports.util");
+import { mongoose } from "../utils/imports.util";
 
 const tweetSchema = new mongoose.Schema(
   {
@@ -23,4 +23,4 @@ const tweetSchema = new mongoose.Schema(
 );
 
 const Tweet = mongoose.model("Tweet", tweetSchema);
-module.exports = Tweet;
+export default Tweet;

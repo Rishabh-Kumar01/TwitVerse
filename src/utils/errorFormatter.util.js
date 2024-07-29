@@ -8,4 +8,4 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   };
 };
 
-module.exports = errorFormatter;
+export default errorFormatter;

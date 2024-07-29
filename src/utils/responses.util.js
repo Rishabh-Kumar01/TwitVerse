@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   responseStatus400: (response, message, errors) =>
     response.status(400).send({ message, errors }),
   responseStatus401: (response, message, errors) =>

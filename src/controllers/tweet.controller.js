@@ -29,8 +29,23 @@ const createTweet = async (req, res) => {
 };
 
 const getTweets = async (req, res) => {
-  console.log("getTweets");
-  return "getTweets";
+  try {
+    console.log("getTweets");
+    return res.status(200).json({
+      success: true,
+      message: "Tweets retrieved successfully",
+      data: [],
+      error: [],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: "Failed to get tweets",
+      data: [],
+      error: error.message,
+    });
+  }
 };
 
 export { createTweet, getTweets };

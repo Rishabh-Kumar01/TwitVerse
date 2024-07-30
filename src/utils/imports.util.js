@@ -6,6 +6,7 @@ import helmet from "helmet";
 import cors from "cors";
 import compression from "compression";
 import expressValidator from "express-validator";
+import bodyParser from "body-parser";
 
 export {
   mongoose,
@@ -16,4 +17,5 @@ export {
   compression,
   expressValidator,
   dotenv,
+  bodyParser,
 };

@@ -21,7 +21,7 @@ class TweetService {
     const content = data.content;
     const hashtags = content
       .match(/#[0-9a-zA-Z_]+/g)
-      .map((tag) => tag.substring(1));
+      .map((tag) => tag.substring(1).toLowerCase());
 
     // Create the tweet
     const tweet = await this.tweetRepository.createTweet({ content: content });
@@ -37,24 +37,19 @@ class TweetService {
     });
 
     // Create the new hashtags with the new tweet id
-    const newHashtags = hashtags.filter(
-      (tag) => !existedHashtagsNames.includes(tag)
+    const newHashtagsSet = new Set(
+      hashtags.filter((tag) => !existedHashtagsNames.includes(tag))
     );
-    const newHashtagsObjects = newHashtags.map((tag) => ({
+    const newHashtagsObjects = Array.from(newHashtagsSet).map((tag) => ({
       name: tag,
       tweets: [tweet._id],
     }));
-    const createdHashtags = await this.hashtagRepository.createHashtags(
+    const hashtagsCreated = await this.hashtagRepository.createHashtags(
       newHashtagsObjects
     );
+    console.log(hashtagsCreated);
 
-    // Update the tweet with the hashtag ids
-    let hashtagIds = existedHashtags.map((tag) => tag._id);
-    hashtagIds = hashtagIds.concat(createdHashtags.map((tag) => tag._id));
-    const updatedTweet = await this.tweetRepository.updateTweet(tweet._id, {
-      hashtags: hashtagIds,
-    });
-    return updatedTweet;
+    return tweet;
   }
 
   async getTweetById(id) {

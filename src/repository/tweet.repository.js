@@ -16,7 +16,7 @@ class TweetRepository {
   }
 
   async getTweetById(id) {
-    return Tweet.findByPk(id);
+    return Tweet.findById(id);
   }
 
   async getTweets() {
@@ -30,6 +30,19 @@ class TweetRepository {
       },
       {
         hashtags: data.hashtags,
+      },
+      { new: true }
+    );
+    return tweet;
+  }
+
+  async updateLikeCount(id, value) {
+    const tweet = await Tweet.findOneAndUpdate(
+      {
+        _id: id,
+      },
+      {
+        $inc: { countOfLikes: value },
       },
       { new: true }
     );

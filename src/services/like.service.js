@@ -20,7 +20,6 @@ class LikeService extends CrudService {
 
   async toggleLike(data) {
     try {
-
       // Check if the tweet exists
       const tweet = await this.tweetRepository.getTweetById(data.likeable);
       if (!tweet) {
@@ -44,7 +43,6 @@ class LikeService extends CrudService {
         return {
           action: "unliked",
           like: {
-            id: isExists._id,
             userId: data.userId,
             likeable: data.likeable,
             onModel: data.onModel,
@@ -61,9 +59,10 @@ class LikeService extends CrudService {
         return {
           action: "liked",
           like: {
-            userId: data.userId,
-            likeable: data.likeable,
-            onModel: data.onModel,
+            id: response._id,
+            userId: response.userId,
+            likeable: response.likeable,
+            onModel: response.onModel,
           },
         };
       }

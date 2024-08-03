@@ -19,9 +19,14 @@ class TweetService {
   async createTweet(data) {
     // Separate HashTags from the content
     const content = data.content;
-    const hashtags = content
-      .match(/#[0-9a-zA-Z_]+/g)
-      .map((tag) => tag.substring(1).toLowerCase());
+    const extractHashtags = (content) => {
+      const regex = /(?:^|\s)##?([0-9a-zA-Z_]+)(?=\s|$|[.,!?])/g;
+      const matches = content.matchAll(regex);
+      return Array.from(matches, (match) => match[1].toLowerCase());
+    };
+
+    const hashtags = extractHashtags(content);
+    console.log(hashtags);
 
     // Create the tweet
     const tweet = await this.tweetRepository.createTweet({ content: content });
@@ -44,10 +49,8 @@ class TweetService {
       name: tag,
       tweets: [tweet._id],
     }));
-    const hashtagsCreated = await this.hashtagRepository.createHashtags(
-      newHashtagsObjects
-    );
-    console.log(hashtagsCreated);
+    const hashtagsCreated =
+      this.hashtagRepository.createHashtags(newHashtagsObjects);
 
     return tweet;
   }

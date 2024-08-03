@@ -14,10 +14,10 @@ class CrudRepository {
     }
   }
 
-  async getById(id) {
+  async getById(data) {
     try {
-      const data = this.model.findById(id);
-      return data;
+      const response = this.model.findOne(data);
+      return response;
     } catch (error) {
       console.log(error, "Error in Crud Repository while getting by id");
       throw new Error(`Error in Crud Repository while getting by id: ${error}`);

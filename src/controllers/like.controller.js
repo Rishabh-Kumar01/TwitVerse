@@ -4,7 +4,12 @@ const tweetService = LikeService.getInstance();
 
 const toggleLike = async (req, res) => {
   try {
-    const response = await tweetService.toggleLike(req.body);
+    const { userId, modelId, modelType } = req.body;
+    const response = await tweetService.toggleLike({
+      userId,
+      modelId,
+      modelType,
+    });
     return res.status(200).json({
       success: true,
       message: "Like toggled successfully",

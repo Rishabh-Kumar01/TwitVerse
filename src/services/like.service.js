@@ -1,14 +1,17 @@
 import {
   LikeRepository,
   TweetRepository,
+  CommentRepository,
 } from "../repository/index.repository.js";
 import CrudService from "./crud.service.js";
+import { mongoose } from "../utils/imports.util.js";
 
 class LikeService extends CrudService {
   constructor() {
     const likeRepository = LikeRepository.getInstance();
     super(likeRepository);
     this.tweetRepository = TweetRepository.getInstance();
+    this.commentRepository = CommentRepository.getInstance();
   }
 
   static getInstance() {
@@ -21,48 +24,92 @@ class LikeService extends CrudService {
   async toggleLike(data) {
     try {
       // Check if the tweet exists
-      const tweet = await this.tweetRepository.getTweetById(data.likeable);
-      if (!tweet) {
-        throw new Error("Tweet does not exist");
+      let modelIdExists;
+
+      if (data.modelType === "Tweet") {
+        modelIdExists = await this.tweetRepository.getById({
+          _id: data.modelId,
+        });
+      } else if (data.modelType === "Comment") {
+        modelIdExists = await this.commentRepository.getById({
+          _id: data.modelId,
+        });
+      }
+      console.log(
+        modelIdExists,
+        "ModelIdExists in Like Service while toggling like"
+      );
+      if (!modelIdExists) {
+        throw new Error("Model Id does not exist");
       }
 
       // Check if the like already exists
-      const isExists = await this.repository.getByUserIdAndLikeable(
-        data.userId,
-        data.likeable
-      );
+      let isExists;
+
+      if (data.modelType === "Tweet") {
+        isExists = await this.repository.getById({
+          userId: data.userId,
+          likeable: data.modelId,
+        });
+      } else if (data.modelType === "Comment") {
+        isExists = await this.repository.getById({
+          userId: data.userId,
+          likeable: data.modelId,
+        });
+      }
       console.log(isExists, "IsExists in Like Service while toggling like");
       if (isExists) {
-        // If like exists, delete it and reduce the like count by 1 from tweet
-
+        // If like exists, delete it and reduce the like count by 1
         const response = await this.repository.delete(isExists._id);
         if (response.deletedCount === 0) {
           throw new Error("Like not deleted");
         }
-        await this.tweetRepository.updateLikeCount(data.likeable, -1);
+
+        if (data.modelType === "Tweet") {
+          await this.tweetRepository.update(data.modelId, {
+            $inc: { countOfLikes: -1 },
+          });
+        } else if (data.modelType === "Comment") {
+          await this.commentRepository.update(data.modelId, {
+            $inc: { countOfLikes: -1 },
+          });
+        }
+
         return {
           action: "unliked",
           like: {
             userId: data.userId,
-            likeable: data.likeable,
-            onModel: data.onModel,
+            modelId: data.modelId,
+            modelType: data.modelType,
           },
         };
       } else {
-        // If like does not exist, create it and increase the like count by 1 from tweet
-
-        const response = await this.repository.create(data);
+        // If like does not exist, create it and increase the like count by 1
+        const response = await this.repository.create({
+          userId: data.userId,
+          likeable: data.modelId,
+          onModel: data.modelType,
+        });
         if (!response) {
           throw new Error("Like not created");
         }
-        await this.tweetRepository.updateLikeCount(data.likeable, 1);
+
+        if (data.modelType === "Tweet") {
+          await this.tweetRepository.update(data.modelId, {
+            $inc: { countOfLikes: 1 },
+          });
+        } else if (data.modelType === "Comment") {
+          await this.commentRepository.update(data.modelId, {
+            $inc: { countOfLikes: 1 },
+          });
+        }
         return {
           action: "liked",
           like: {
             id: response._id,
             userId: response.userId,
-            likeable: response.likeable,
-            onModel: response.onModel,
+            modelId: response.likeable,
+            modelType: response.onModel,
           },
         };
       }

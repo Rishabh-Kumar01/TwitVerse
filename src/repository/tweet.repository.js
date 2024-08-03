@@ -1,6 +1,11 @@
 import { Tweet } from "../models/index.js";
+import CrudRepository from "./crud.repository.js";
 
-class TweetRepository {
+class TweetRepository extends CrudRepository {
+  constructor() {
+    super(Tweet);
+  }
+
   static getInstance() {
     if (!TweetRepository.instance) {
       TweetRepository.instance = new TweetRepository();

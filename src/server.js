@@ -8,6 +8,7 @@ import {
 } from "./utils/imports.util.js";
 import { serverConfig, connection } from "./config/index.config.js";
 import routes from "./routes/index.route.js";
+
 const app = express();
 
 const serverStart = async () => {

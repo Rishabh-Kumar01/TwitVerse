@@ -3,6 +3,7 @@ import {
   TweetController,
   UserController,
   LikeController,
+  CommentController,
 } from "../../controllers/index.controller.js";
 
 const router = express.Router();
@@ -40,10 +41,17 @@ router.get("/tweets", TweetController.getTweets);
 // Create a new user
 router.post("/users", UserController.createUser);
 
-// Like 
+// Like
 
 // POST - api/v1/toggle-likes
 // Toggle like on a tweet, comment
 router.post("/toggle-likes", LikeController.toggleLike);
+
+
+// Comment
+
+// POST - api/v1/comments
+// Create a new comment
+router.post("/comments", CommentController.createComment);
 
 export default router;

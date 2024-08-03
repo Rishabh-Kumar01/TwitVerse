@@ -28,9 +28,7 @@ class TweetRepository {
       {
         _id: id,
       },
-      {
-        hashtags: data.hashtags,
-      },
+      data,
       { new: true }
     );
     return tweet;

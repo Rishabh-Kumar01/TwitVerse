@@ -47,11 +47,14 @@ router.post("/users", UserController.createUser);
 // Toggle like on a tweet, comment
 router.post("/toggle-likes", LikeController.toggleLike);
 
-
 // Comment
 
 // POST - api/v1/comments
 // Create a new comment
 router.post("/comments", CommentController.createComment);
+
+// GET - api/v1/comments/:id
+// Get a comment by id
+router.get("/comments/:id", CommentController.getComment);
 
 export default router;

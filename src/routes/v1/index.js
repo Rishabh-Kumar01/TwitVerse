@@ -37,9 +37,13 @@ router.get("/tweets", TweetController.getTweets);
 
 // User
 
-// POST - api/v1/users
-// Create a new user
+// POST - api/v1/signup
+// SignUp a new user
 router.post("/signup", UserController.signUp);
+
+// POST - api/v1/login
+// Login User
+router.post("/login", UserController.logIn)
 
 // Like
 

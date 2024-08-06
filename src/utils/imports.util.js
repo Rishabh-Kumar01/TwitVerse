@@ -8,6 +8,8 @@ import compression from "compression";
 import expressValidator from "express-validator";
 import bodyParser from "body-parser";
 import bcrypt from "bcrypt";
+import jwt from 'jsonwebtoken'
+import responseCodes from 'http-status-codes'
 
 export {
   mongoose,
@@ -19,5 +21,7 @@ export {
   expressValidator,
   dotenv,
   bodyParser,
-  bcrypt
+  bcrypt,
+  jwt, 
+  responseCodes
 };

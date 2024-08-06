@@ -5,6 +5,7 @@ import {
   LikeController,
   CommentController,
 } from "../../controllers/index.controller.js";
+import {authenticate} from "../../middlewares/index.middleware.js"
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ const router = express.Router();
 //   },
 //   "error": []
 // }
-router.post("/tweets", TweetController.createTweet);
+router.post("/tweets", authenticate,  TweetController.createTweet);
 
 // GET - api/v1/tweets
 // Get all tweets
@@ -49,13 +50,13 @@ router.post("/login", UserController.logIn)
 
 // POST - api/v1/toggle-likes
 // Toggle like on a tweet, comment
-router.post("/toggle-likes", LikeController.toggleLike);
+router.post("/toggle-likes", authenticate,  LikeController.toggleLike);
 
 // Comment
 
 // POST - api/v1/comments
 // Create a new comment
-router.post("/comments", CommentController.createComment);
+router.post("/comments",authenticate, CommentController.createComment);
 
 // GET - api/v1/comments/:id
 // Get a comment by id

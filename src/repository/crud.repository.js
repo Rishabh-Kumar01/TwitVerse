@@ -5,7 +5,6 @@ class CrudRepository {
 
   async create(data) {
     try {
-      console.log(data, "Data in Crud Repository while creating");
       const newData = this.model.create(data);
       return newData;
     } catch (error) {

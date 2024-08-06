@@ -35,10 +35,7 @@ class LikeService extends CrudService {
           _id: data.modelId,
         });
       }
-      console.log(
-        modelIdExists,
-        "ModelIdExists in Like Service while toggling like"
-      );
+      
       if (!modelIdExists) {
         throw new Error("Model Id does not exist");
       }
@@ -57,7 +54,6 @@ class LikeService extends CrudService {
           likeable: data.modelId,
         });
       }
-      console.log(isExists, "IsExists in Like Service while toggling like");
       if (isExists) {
         // If like exists, delete it and reduce the like count by 1
         const response = await this.repository.delete(isExists._id);

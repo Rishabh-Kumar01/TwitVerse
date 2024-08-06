@@ -10,6 +10,8 @@ import bodyParser from "body-parser";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken'
 import responseCodes from 'http-status-codes'
+import passportJWT from 'passport-jwt'
+import passport from "passport";
 
 export {
   mongoose,
@@ -23,5 +25,7 @@ export {
   bodyParser,
   bcrypt,
   jwt, 
-  responseCodes
+  responseCodes,
+  passportJWT,
+  passport
 };

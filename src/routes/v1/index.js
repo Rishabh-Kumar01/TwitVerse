@@ -39,7 +39,7 @@ router.get("/tweets", TweetController.getTweets);
 
 // POST - api/v1/users
 // Create a new user
-router.post("/users", UserController.createUser);
+router.post("/signup", UserController.signUp);
 
 // Like
 

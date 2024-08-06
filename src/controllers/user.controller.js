@@ -2,10 +2,14 @@ import { UserService } from "../services/index.services.js";
 
 const userService = UserService.getInstance();
 
-const createUser = async (req, res) => {
+const signUp = async (req, res) => {
   try {
     console.log(req.body);
-    const response = await userService.create(req.body);
+    const response = await userService.create({
+      email: req.body.email,
+      password: req.body.password,
+      name: req.body.name,
+    });
     return res.status(201).json({
       success: true,
       message: "User created successfully",
@@ -23,4 +27,5 @@ const createUser = async (req, res) => {
   }
 };
 
-export { createUser };
+
+export { signUp };

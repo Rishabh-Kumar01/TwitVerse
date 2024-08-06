@@ -7,6 +7,7 @@ import cors from "cors";
 import compression from "compression";
 import expressValidator from "express-validator";
 import bodyParser from "body-parser";
+import bcrypt from "bcrypt";
 
 export {
   mongoose,
@@ -18,4 +19,5 @@ export {
   expressValidator,
   dotenv,
   bodyParser,
+  bcrypt
 };

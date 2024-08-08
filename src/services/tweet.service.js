@@ -2,7 +2,7 @@ import {
   TweetRepository,
   HashtagRepository,
 } from "../repository/index.repository.js";
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL , deleteObject} from 'firebase/storage';
 import { firebaseConfig } from "../config/index.config.js";
 
 class TweetService {
@@ -16,6 +16,19 @@ class TweetService {
       TweetService.instance = new TweetService();
     }
     return TweetService.instance;
+  }
+
+  async #deleteImagesFromStorage(imageUrls) {
+    try {
+      const deletePromises = imageUrls.map(async (url) => {
+        const imageRef = ref(firebaseConfig.storage, url);
+        await deleteObject(imageRef);
+      });
+      await Promise.all(deletePromises);
+    } catch (error) {
+      console.error('Error deleting images from storage:', error);
+      throw new Error('Failed to delete images from storage');
+    }
   }
 
   async createTweet(data) {
@@ -57,7 +70,7 @@ class TweetService {
     return {
       id: tweet._id,
       content: tweet.content,
-      image: tweet.image,
+      images: tweet.images,
       createdAt: tweet.createdAt,
       updatedAt: tweet.updatedAt,
     };
@@ -95,8 +108,31 @@ class TweetService {
     return this.tweetRepository.getInstance().updateTweet(id, tweet);
   }
 
+ 
+
   async deleteTweet(id) {
-    return this.tweetRepository.getInstance().deleteTweet(id);
+    try {
+      const tweet = await this.tweetRepository.getTweetById(id);
+      if (!tweet) {
+        throw new Error('Tweet not found');
+      }
+
+      // Delete images from Firebase Storage
+      if (tweet.images && tweet.images.length > 0) {
+        await this.#deleteImagesFromStorage(tweet.images);
+      }
+
+      // Delete the tweet from the database
+      await this.tweetRepository.deleteTweet(id);
+
+      // Remove tweet reference from hashtags
+//      await this.hashtagRepository.removeTweetFromHashtags(id);
+
+      return { success: true, message: 'Tweet and associated images deleted successfully' };
+    } catch (error) {
+      console.error('Error deleting tweet:', error);
+      throw new Error('Failed to delete tweet');
+    }
   }
 }
 

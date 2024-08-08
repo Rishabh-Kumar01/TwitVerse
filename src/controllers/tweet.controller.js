@@ -7,9 +7,14 @@ const createTweet = async (req, res) => {
     if (!req.body.content) {
       throw new Error("Content is required");
     }
+    if(!req.files) {
+      throw new Error("Image is required");
+    }
+    const files = req.files;
+    const imageUrls = await Promise.all(files.map(file => tweetService.uploadImage(file)));
     const data = {
       content: req.body.content,
-      images: req.body.images,
+      images: imageUrls,
     };
     const tweet = await tweetService.createTweet(data);
     res.status(201).json({
@@ -31,12 +36,10 @@ const createTweet = async (req, res) => {
 
 const uploadImage = async (req, res) => {
   try {
-    console.log("uploadImage", req);
     if (!req.files) {
       throw new Error("Image is required");
     }
     const files = req.files;
-    console.log(files, "file");
     let imageUrls = [];
     for (const file of files) {
       const url = await tweetService.uploadImage(file);
@@ -79,4 +82,25 @@ const getTweets = async (req, res) => {
   }
 };
 
-export { createTweet, getTweets, uploadImage };
+const deleteTweet = async (req, res) => {
+  try {
+    const tweetId = req.params.id;
+    await tweetService.deleteTweet(tweetId);
+    return res.status(200).json({
+      success: true,
+      message: "Tweet deleted successfully",
+      data: [],
+      error: [],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: "Failed to delete tweet",
+      data: [],
+      error: error.message,
+    });
+  }
+}
+
+export { createTweet, getTweets, uploadImage, deleteTweet };

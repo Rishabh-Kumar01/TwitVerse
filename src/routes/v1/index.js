@@ -31,7 +31,7 @@ const router = express.Router();
 //   },
 //   "error": []
 // }
-router.post("/tweets", authenticate,  TweetController.createTweet);
+router.post("/tweets", authenticate, multerUpload.array("images", 5),  TweetController.createTweet);
 
 // POST - api/v1/upload-image
 // Upload an image
@@ -40,6 +40,10 @@ router.post("/upload-image", multerUpload.array("images", 5), TweetController.up
 // GET - api/v1/tweets
 // Get all tweets
 router.get("/tweets", TweetController.getTweets);
+
+// DELETE - api/v1/tweets/:id
+// Delete a tweet by id
+router.delete("/tweets/:id", authenticate, TweetController.deleteTweet);
 
 // User
 

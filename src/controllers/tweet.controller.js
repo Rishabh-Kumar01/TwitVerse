@@ -9,6 +9,7 @@ const createTweet = async (req, res) => {
     }
     const data = {
       content: req.body.content,
+      images: req.body.images,
     };
     const tweet = await tweetService.createTweet(data);
     res.status(201).json({
@@ -30,16 +31,21 @@ const createTweet = async (req, res) => {
 
 const uploadImage = async (req, res) => {
   try {
-    if (!req.file) {
+    console.log("uploadImage", req);
+    if (!req.files) {
       throw new Error("Image is required");
     }
-    const file = req.file;
-    console.log(file, "file");
-    const imageUrl = await tweetService.uploadImage(file);
+    const files = req.files;
+    console.log(files, "file");
+    let imageUrls = [];
+    for (const file of files) {
+      const url = await tweetService.uploadImage(file);
+      imageUrls.push(url);
+    }
     res.status(201).json({
       success: true,
       message: "Image uploaded successfully",
-      data: imageUrl,
+      data: imageUrls,
       error: [],
     });
   } catch (error) {

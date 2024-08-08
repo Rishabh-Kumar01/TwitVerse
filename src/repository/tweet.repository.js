@@ -14,8 +14,10 @@ class TweetRepository extends CrudRepository {
   }
 
   async createTweet(data) {
+    console.log(data);
     const tweet = await Tweet.create({
       content: data.content,
+      images: data.images
     });
     return tweet;
   }

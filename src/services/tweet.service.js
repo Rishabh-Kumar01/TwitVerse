@@ -31,7 +31,7 @@ class TweetService {
     console.log(hashtags);
 
     // Create the tweet
-    const tweet = await this.tweetRepository.createTweet({ content: content });
+    const tweet = await this.tweetRepository.createTweet({ content: content, images: data.images});
 
     // Get the Existed Hashtags
     const existedHashtags = await this.hashtagRepository.getHashtags(hashtags);
@@ -54,7 +54,13 @@ class TweetService {
     const hashtagsCreated =
       this.hashtagRepository.createHashtags(newHashtagsObjects);
 
-    return tweet;
+    return {
+      id: tweet._id,
+      content: tweet.content,
+      image: tweet.image,
+      createdAt: tweet.createdAt,
+      updatedAt: tweet.updatedAt,
+    };
   }
 
   async uploadImage (file) {

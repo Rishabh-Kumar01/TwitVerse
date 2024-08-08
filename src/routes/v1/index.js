@@ -35,7 +35,7 @@ router.post("/tweets", authenticate,  TweetController.createTweet);
 
 // POST - api/v1/upload-image
 // Upload an image
-router.post("/upload-image", multerUpload.single("image"), TweetController.uploadImage);
+router.post("/upload-image", multerUpload.array("images", 5), TweetController.uploadImage);
 
 // GET - api/v1/tweets
 // Get all tweets

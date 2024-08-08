@@ -25,7 +25,9 @@ class CommentService extends CrudService {
       if (data.modelType === "Tweet") {
         isExists = await this.tweetRepository.getTweetById(data.modelId);
       } else if (data.modelType === "Comment") {
-        isExists = await this.repository.getById(data.modelId);
+        isExists = await this.repository.getById({
+          _id: data.modelId,
+        });
       }
 
       if (!isExists) {

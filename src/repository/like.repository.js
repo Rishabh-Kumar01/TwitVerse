@@ -31,6 +31,16 @@ class LikeRepository extends CrudRepository {
       );
     }
   }
+
+  async delete(id) {
+    try {
+      const deletedData = await Like.deleteMany({ likeable: id });
+      return deletedData;
+    } catch (error) {
+      console.log(error, "Error in Like Repository while deleting");
+      throw new Error(`Error in Like Repository while deleting: ${error}`);
+    }
+  }
 }
 
 export default LikeRepository;

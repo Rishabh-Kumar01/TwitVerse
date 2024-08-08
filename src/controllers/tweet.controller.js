@@ -85,11 +85,11 @@ const getTweets = async (req, res) => {
 const deleteTweet = async (req, res) => {
   try {
     const tweetId = req.params.id;
-    await tweetService.deleteTweet(tweetId);
+    const response = await tweetService.deleteTweet(tweetId);
     return res.status(200).json({
       success: true,
-      message: "Tweet deleted successfully",
-      data: [],
+      message: response.message ||  "Tweet deleted successfully",
+      data: response,
       error: [],
     });
   } catch (error) {

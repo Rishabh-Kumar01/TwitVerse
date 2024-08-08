@@ -35,6 +35,17 @@ class HashtagRepository {
     );
     return hashtags;
   }
+
+  async removeTweetFromHashtags(tweetId) {
+    return Hashtag.updateMany(
+      {
+        tweets: tweetId,
+      },
+      {
+        $pull: { tweets: tweetId },
+      }
+    );
+  }
 }
 
 export default HashtagRepository;

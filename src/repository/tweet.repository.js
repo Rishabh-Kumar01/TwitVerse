@@ -55,7 +55,7 @@ class TweetRepository extends CrudRepository {
   }
 
   async deleteTweet(id) {
-    return Tweet.findByIdAndDelete({ _id: id });
+    return await Tweet.findByIdAndDelete({ _id: id });
   }
 }
 

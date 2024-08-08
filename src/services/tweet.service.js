@@ -1,6 +1,8 @@
 import {
   TweetRepository,
   HashtagRepository,
+  CommentRepository,
+  LikeRepository
 } from "../repository/index.repository.js";
 import { ref, uploadBytes, getDownloadURL , deleteObject} from 'firebase/storage';
 import { firebaseConfig } from "../config/index.config.js";
@@ -9,6 +11,8 @@ class TweetService {
   constructor() {
     this.tweetRepository = TweetRepository.getInstance();
     this.hashtagRepository = HashtagRepository.getInstance();
+    this.commentRepository = CommentRepository.getInstance();
+    this.likeRepository = LikeRepository.getInstance();
   }
 
   static getInstance() {
@@ -28,6 +32,21 @@ class TweetService {
     } catch (error) {
       console.error('Error deleting images from storage:', error);
       throw new Error('Failed to delete images from storage');
+    }
+  }
+
+  async #deleteCommentsRecursively(comments) {
+    for (const comment of comments) {
+      // Delete likes associated with this comment
+      await this.likeRepository.delete(comment._id);
+  
+      // Recursively delete nested comments
+      if (comment.comments && comment.comments.length > 0) {
+        await this.#deleteCommentsRecursively(comment.comments);
+      }
+  
+      // Delete the comment itself
+      await this.commentRepository.delete(comment._id);
     }
   }
 
@@ -116,24 +135,36 @@ class TweetService {
       if (!tweet) {
         throw new Error('Tweet not found');
       }
-
+  
       // Delete images from Firebase Storage
       if (tweet.images && tweet.images.length > 0) {
         await this.#deleteImagesFromStorage(tweet.images);
       }
-
+  
+      // Get all comments associated with the tweet
+      const commentsOfTweet = await this.commentRepository.getById({_id: id});
+  
+      // Recursively delete comments and their likes
+      await this.#deleteCommentsRecursively(commentsOfTweet);
+  
       // Delete the tweet from the database
       await this.tweetRepository.deleteTweet(id);
-
+  
       // Remove tweet reference from hashtags
-//      await this.hashtagRepository.removeTweetFromHashtags(id);
-
-      return { success: true, message: 'Tweet and associated images deleted successfully' };
+      await this.hashtagRepository.removeTweetFromHashtags(id);
+  
+      // Delete the likes associated with the tweet
+      await this.likeRepository.delete(id);
+  
+      return { message: 'Tweet and all associated data deleted successfully' };
+  
     } catch (error) {
       console.error('Error deleting tweet:', error);
       throw new Error('Failed to delete tweet');
     }
   }
+  
+  
 }
 
 export default TweetService;

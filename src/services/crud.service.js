@@ -24,10 +24,9 @@ class CrudService {
     }
   }
 
-  async getById(id) {
+  async getById(id, page, size) {
     try {
-      const response = await this.repository.getById({ _id: id });
-      console.log(response, "Response in Crud Service while getting by id");
+      const response = await this.repository.getById({ _id: id }, page, size);
       return response;
     } catch (error) {
       console.log(error, "Error in Crud Service while getting by id");

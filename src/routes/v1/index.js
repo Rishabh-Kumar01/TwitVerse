@@ -6,6 +6,7 @@ import {
   CommentController,
 } from "../../controllers/index.controller.js";
 import {authenticate} from "../../middlewares/index.middleware.js"
+import {multerUpload} from "../../config/index.config.js"
 
 const router = express.Router();
 
@@ -31,6 +32,10 @@ const router = express.Router();
 //   "error": []
 // }
 router.post("/tweets", authenticate,  TweetController.createTweet);
+
+// POST - api/v1/upload-image
+// Upload an image
+router.post("/upload-image", multerUpload.single("image"), TweetController.uploadImage);
 
 // GET - api/v1/tweets
 // Get all tweets

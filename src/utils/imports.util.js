@@ -12,6 +12,7 @@ import jwt from 'jsonwebtoken'
 import responseCodes from 'http-status-codes'
 import passportJWT from 'passport-jwt'
 import passport from "passport";
+import multer from 'multer'
 
 export {
   mongoose,
@@ -27,5 +28,6 @@ export {
   jwt, 
   responseCodes,
   passportJWT,
-  passport
+  passport,
+  multer
 };

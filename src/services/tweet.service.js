@@ -2,6 +2,8 @@ import {
   TweetRepository,
   HashtagRepository,
 } from "../repository/index.repository.js";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { firebaseConfig } from "../config/index.config.js";
 
 class TweetService {
   constructor() {
@@ -54,6 +56,26 @@ class TweetService {
 
     return tweet;
   }
+
+  async uploadImage (file) {
+    try {
+      const filename = `${Date.now()}_${file.originalname}`;
+      const storageRef = ref(firebaseConfig.storage, `tweetImages/${filename}`);
+      
+      // Upload the file to Firebase Storage
+      const snapshot = await uploadBytes(storageRef, file.buffer, {
+        contentType: file.mimetype,
+      });
+      console.log('File uploaded to Firebase Storage:', snapshot);
+      // Get the public download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log('File available at:', downloadURL);
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw new Error('Failed to upload image');
+    }
+  };
 
   async getTweetById(id) {
     return this.tweetRepository.getInstance().getTweetById(id);

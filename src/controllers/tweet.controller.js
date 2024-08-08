@@ -28,6 +28,31 @@ const createTweet = async (req, res) => {
   }
 };
 
+const uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      throw new Error("Image is required");
+    }
+    const file = req.file;
+    console.log(file, "file");
+    const imageUrl = await tweetService.uploadImage(file);
+    res.status(201).json({
+      success: true,
+      message: "Image uploaded successfully",
+      data: imageUrl,
+      error: [],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: "Image upload failed",
+      data: [],
+      error: error.message,
+    });
+  }
+};
+
 const getTweets = async (req, res) => {
   try {
     console.log("getTweets");
@@ -48,4 +73,4 @@ const getTweets = async (req, res) => {
   }
 };
 
-export { createTweet, getTweets };
+export { createTweet, getTweets, uploadImage };

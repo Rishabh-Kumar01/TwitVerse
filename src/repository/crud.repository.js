@@ -8,7 +8,6 @@ class CrudRepository {
       const newData = this.model.create(data);
       return newData;
     } catch (error) {
-      console.log(error, "Error in Crud Repository while creating");
       throw new Error(`Error in Crud Repository while creating: ${error}`);
     }
   }

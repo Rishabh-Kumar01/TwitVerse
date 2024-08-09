@@ -85,3 +85,72 @@ describe('Create User', () => {
         expect(spy).toHaveBeenCalled();
     })
 })
+
+describe('User Repository - findByEmail', () => {
+    let userRepository;
+
+    beforeEach(() => {
+        userRepository = UserRepository.getInstance();
+        jest.clearAllMocks();
+    });
+
+    test('Should successfully find a user by email', async () => {
+        const email = 'test@example.com';
+        const mockUser = {
+            _id: 'user123',
+            email: email,
+            name: 'Test User'
+        };
+
+        const findOneSpy = jest.spyOn(User, 'findOne').mockResolvedValue(mockUser);
+
+        const result = await userRepository.findByEmail(email);
+
+        expect(findOneSpy).toHaveBeenCalledWith({ email: email });
+        expect(result).toEqual(mockUser);
+    });
+
+    test('Should throw an error if user is not found', async () => {
+        const email = 'nonexistent@example.com';
+
+        const findOneSpy = jest.spyOn(User, 'findOne').mockResolvedValue(null);
+
+        await expect(userRepository.findByEmail(email)).rejects.toThrow('User Not Found');
+        expect(findOneSpy).toHaveBeenCalledWith({ email: email });
+    });
+
+    test('Should throw an error if database query fails', async () => {
+        const email = 'test@example.com';
+        const errorMessage = 'Database connection error';
+
+        const findOneSpy = jest.spyOn(User, 'findOne').mockRejectedValue(new Error(errorMessage));
+
+        await expect(userRepository.findByEmail(email)).rejects.toThrow(errorMessage);
+        expect(findOneSpy).toHaveBeenCalledWith({ email: email });
+    });
+
+    test('Should handle empty email input', async () => {
+        const email = '';
+
+        const findOneSpy = jest.spyOn(User, 'findOne').mockResolvedValue(null);
+
+        await expect(userRepository.findByEmail(email)).rejects.toThrow('User Not Found');
+        expect(findOneSpy).toHaveBeenCalledWith({ email: email });
+    });
+
+    test('Should handle case-insensitive email search', async () => {
+        const email = 'TEST@example.com';
+        const mockUser = {
+            _id: 'user123',
+            email: 'test@example.com',
+            name: 'Test User'
+        };
+
+        const findOneSpy = jest.spyOn(User, 'findOne').mockResolvedValue(mockUser);
+
+        const result = await userRepository.findByEmail(email);
+
+        expect(findOneSpy).toHaveBeenCalledWith({ email: email });
+        expect(result).toEqual(mockUser);
+    });
+});

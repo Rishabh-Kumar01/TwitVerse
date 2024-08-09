@@ -1,8 +1,6 @@
 import { User } from "../models/index.js";
 import CrudRepository from "./crud.repository.js";
-import {responseCodes} from "../utils/imports.util.js"
 
-const { StatusCodes } = responseCodes;
 
 class UserRepository extends CrudRepository {
   constructor() {
@@ -23,12 +21,7 @@ class UserRepository extends CrudRepository {
       });
       if (!user) {
         console.log("User Not Found");
-        throw new Error(
-          "UserNotFound",
-          "User Not Found",
-          "User with the given Email is not found",
-          StatusCodes.NOT_FOUND
-        );
+        throw new Error("User Not Found");
       }
       return user;
     } catch (error) {

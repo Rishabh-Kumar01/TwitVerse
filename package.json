@@ -6,7 +6,14 @@
   "type": "module",
   "scripts": {
     "start": "npx nodemon src/server.js",
-    "dev": "npx nodemon src/server.js"
+    "dev": "npx nodemon src/server.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "jest": {
+    "transform": {},
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    }
   },
   "keywords": [],
   "author": "Rishabh Teotia",
@@ -29,5 +36,8 @@
     "nodemon": "^3.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }

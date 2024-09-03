@@ -1,13 +1,13 @@
 import { UserRepository } from "../repository/index.repository.js";
-import CrudService from "./crud.service.js";
-import { jwt, bcrypt } from "../utils/imports.util.js";
+import { ServiceError, DatabaseError } from "../error/custom.error.js";
+import { jwt, bcrypt, responseCodes } from "../utils/imports.util.js";
 import { serverConfig } from "../config/serverConfig.js";
 
-class UserService extends CrudService {
+const { StatusCodes } = responseCodes;
+
+class UserService {
   constructor() {
-    const userRepository = UserRepository.getInstance();
-    super(userRepository);
-    this.userRepository = userRepository;
+    this.userRepository = UserRepository.getInstance();
   }
 
   static getInstance() {
@@ -19,42 +19,69 @@ class UserService extends CrudService {
 
   async #createToken(user) {
     try {
-      const token = jwt.sign(user, serverConfig.JWT_KEY, { expiresIn: "24h" });
-      return token;
+      return jwt.sign(user, serverConfig.JWT_KEY, { expiresIn: "24h" });
     } catch (error) {
-      console.log("Something Went Wrong: User Service: Create Token");
-      throw { error };
+      throw new ServiceError(
+        "Token creation failed",
+        "An error occurred while creating the authentication token",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
   async #checkPassword(password, hashedPassword) {
     try {
-      const response = await bcrypt.compare(password, hashedPassword);
-      return response;
+      return await bcrypt.compare(password, hashedPassword);
     } catch (error) {
-      console.log("Something Went Wrong: User Service: Check Password");
-      throw { error };
+      throw new ServiceError(
+        "Password check failed",
+        "An error occurred while verifying the password",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async create(userData) {
+    try {
+      const user = await this.userRepository.create(userData);
+      return user;
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to create user",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      throw new ServiceError(
+        "User creation failed",
+        "An error occurred while creating the user",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
   async logIn(email, password) {
     try {
-      console.log("service", email, password);
       const user = await this.userRepository.findByEmail(email);
-
       if (!user) {
-        console.log("User Not Found");
-        throw { message: "User Not Found" };
+        throw new ServiceError(
+          "User not found",
+          "No user found with the provided email",
+          StatusCodes.NOT_FOUND
+        );
       }
 
       const isPasswordValid = await this.#checkPassword(
         password,
         user.password
       );
-
       if (!isPasswordValid) {
-        console.log("Invalid Password");
-        throw { message: "Invalid Password" };
+        throw new ServiceError(
+          "Invalid credentials",
+          "The provided password is incorrect",
+          StatusCodes.UNAUTHORIZED
+        );
       }
 
       const token = await this.#createToken({
@@ -64,8 +91,104 @@ class UserService extends CrudService {
 
       return token;
     } catch (error) {
-      console.log("Something Went Wrong: User Service: Log In User");
-      throw { error };
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Login failed",
+        "An error occurred during the login process",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async getById(id) {
+    try {
+      const user = await this.userRepository.findById(id);
+      if (!user) {
+        throw new ServiceError(
+          "User not found",
+          "No user found with the provided ID",
+          StatusCodes.NOT_FOUND
+        );
+      }
+      return user;
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to retrieve user",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "User retrieval failed",
+        "An error occurred while retrieving the user",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async update(id, userData) {
+    try {
+      const updatedUser = await this.userRepository.update(id, userData);
+      if (!updatedUser) {
+        throw new ServiceError(
+          "User not found",
+          "No user found with the provided ID",
+          StatusCodes.NOT_FOUND
+        );
+      }
+      return updatedUser;
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to update user",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "User update failed",
+        "An error occurred while updating the user",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async delete(id) {
+    try {
+      const deletedUser = await this.userRepository.delete(id);
+      if (!deletedUser) {
+        throw new ServiceError(
+          "User not found",
+          "No user found with the provided ID",
+          StatusCodes.NOT_FOUND
+        );
+      }
+      return deletedUser;
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to delete user",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "User deletion failed",
+        "An error occurred while deleting the user",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
     }
   }
 }

@@ -2,10 +2,19 @@ import {
   TweetRepository,
   HashtagRepository,
   CommentRepository,
-  LikeRepository
+  LikeRepository,
 } from "../repository/index.repository.js";
-import { ref, uploadBytes, getDownloadURL , deleteObject} from 'firebase/storage';
+import { ServiceError, DatabaseError } from "../error/custom.error.js";
+import { responseCodes } from "../utils/imports.util.js";
 import { firebaseConfig } from "../config/index.config.js";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+
+const { StatusCodes } = responseCodes;
 
 class TweetService {
   constructor() {
@@ -30,141 +39,234 @@ class TweetService {
       });
       await Promise.all(deletePromises);
     } catch (error) {
-      console.error('Error deleting images from storage:', error);
-      throw new Error('Failed to delete images from storage');
+      throw new ServiceError(
+        "Failed to delete images",
+        "An error occurred while deleting images from storage",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
   async #deleteCommentsRecursively(comments) {
     for (const comment of comments) {
-      // Delete likes associated with this comment
       await this.likeRepository.delete(comment._id);
-  
-      // Recursively delete nested comments
       if (comment.comments && comment.comments.length > 0) {
         await this.#deleteCommentsRecursively(comment.comments);
       }
-  
-      // Delete the comment itself
       await this.commentRepository.delete(comment._id);
     }
   }
 
   async createTweet(data) {
-    // Separate HashTags from the content
-    const content = data.content;
-    const extractHashtags = (content) => {
-      const regex = /(?:^|\s)##?([0-9a-zA-Z_]+)(?=\s|$|[.,!?])/g;
-      const matches = content.matchAll(regex);
-      return Array.from(matches, (match) => match[1].toLowerCase());
-    };
+    try {
+      // Extract hashtags from the tweet content
+      const content = data.content;
+      const extractHashtags = (content) => {
+        const regex = /(?:^|\s)##?([0-9a-zA-Z_]+)(?=\s|$|[.,!?])/g;
+        const matches = content.matchAll(regex);
+        return Array.from(matches, (match) => match[1].toLowerCase());
+      };
 
-    const hashtags = extractHashtags(content);
-    console.log(hashtags);
+      const hashtags = extractHashtags(content);
 
-    // Create the tweet
-    const tweet = await this.tweetRepository.createTweet({ content: content, images: data.images});
+      // Create the tweet
+      const tweet = await this.tweetRepository.createTweet({
+        content: content,
+        images: data.images,
+      });
 
-    // Get the Existed Hashtags
-    const existedHashtags = await this.hashtagRepository.getHashtags(hashtags);
+      // Get the Existed Hashtags
+      const existedHashtags = await this.hashtagRepository.getHashtags(
+        hashtags
+      );
 
-    // Update the existed hashtags with the new tweet id and not requirement to wait for the result
-    const existedHashtagsNames = existedHashtags.map((tag) => tag.name);
-    const existedHashtagsIds = existedHashtags.map((tag) => tag._id);
-    this.hashtagRepository.updateHashTags(existedHashtagsIds, {
-      tweet: tweet._id,
-    });
+      // Update the existed hashtags with the new tweet id and not requirement to wait for the result
+      const existedHashtagsNames = existedHashtags.map((tag) => tag.name);
+      const existedHashtagsIds = existedHashtags.map((tag) => tag._id);
+      await this.hashtagRepository.updateHashTags(existedHashtagsIds, {
+        tweet: tweet._id,
+      });
 
-    // Create the new hashtags with the new tweet id
-    const newHashtagsSet = new Set(
-      hashtags.filter((tag) => !existedHashtagsNames.includes(tag))
-    );
-    const newHashtagsObjects = Array.from(newHashtagsSet).map((tag) => ({
-      name: tag,
-      tweets: [tweet._id],
-    }));
-    const hashtagsCreated =
-      this.hashtagRepository.createHashtags(newHashtagsObjects);
+      // Create the new hashtags with the new tweet id
+      const newHashtagsSet = new Set(
+        hashtags.filter((tag) => !existedHashtagsNames.includes(tag))
+      );
+      const newHashtagsObjects = Array.from(newHashtagsSet).map((tag) => ({
+        name: tag,
+        tweets: [tweet._id],
+      }));
+      await this.hashtagRepository.createHashtags(newHashtagsObjects);
 
-    return {
-      id: tweet._id,
-      content: tweet.content,
-      images: tweet.images,
-      createdAt: tweet.createdAt,
-      updatedAt: tweet.updatedAt,
-    };
+      return {
+        id: tweet._id,
+        content: tweet.content,
+        images: tweet.images,
+        createdAt: tweet.createdAt,
+        updatedAt: tweet.updatedAt,
+      };
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to create tweet",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      throw new ServiceError(
+        "Tweet creation failed",
+        "An error occurred while creating the tweet",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 
-  async uploadImage (file) {
+  async uploadImage(file) {
     try {
       const filename = `${Date.now()}_${file.originalname}`;
       const storageRef = ref(firebaseConfig.storage, `tweetImages/${filename}`);
-      
+
       // Upload the file to Firebase Storage
       const snapshot = await uploadBytes(storageRef, file.buffer, {
         contentType: file.mimetype,
       });
-      console.log('File uploaded to Firebase Storage:', snapshot);
-      // Get the public download URL
+
+      // Get the download URL of the uploaded file
       const downloadURL = await getDownloadURL(snapshot.ref);
-      console.log('File available at:', downloadURL);
       return downloadURL;
     } catch (error) {
-      console.error('Error uploading image:', error);
-      throw new Error('Failed to upload image');
+      throw new ServiceError(
+        "Failed to upload image",
+        "An error occurred while uploading the image",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
     }
-  };
+  }
 
   async getTweetById(id) {
-    return this.tweetRepository.getInstance().getTweetById(id);
+    try {
+      const tweet = await this.tweetRepository.getTweetById(id);
+      if (!tweet) {
+        throw new ServiceError(
+          "Tweet not found",
+          "The specified tweet does not exist",
+          StatusCodes.NOT_FOUND
+        );
+      }
+      return tweet;
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to retrieve tweet",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Tweet retrieval failed",
+        "An error occurred while retrieving the tweet",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 
   async getTweets() {
-    return this.tweetRepository.getInstance().getTweets();
+    try {
+      return await this.tweetRepository.getTweets();
+    } catch (error) {
+      throw new ServiceError(
+        "Failed to retrieve tweets",
+        "An error occurred while retrieving tweets",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 
-  async updateTweet(id, tweet) {
-    return this.tweetRepository.getInstance().updateTweet(id, tweet);
+  async updateTweet(id, tweetData) {
+    try {
+      const updatedTweet = await this.tweetRepository.updateTweet(
+        id,
+        tweetData
+      );
+      if (!updatedTweet) {
+        throw new ServiceError(
+          "Tweet not found",
+          "The specified tweet does not exist",
+          StatusCodes.NOT_FOUND
+        );
+      }
+      return updatedTweet;
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to update tweet",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Tweet update failed",
+        "An error occurred while updating the tweet",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
   }
-
- 
 
   async deleteTweet(id) {
     try {
       const tweet = await this.tweetRepository.getTweetById(id);
       if (!tweet) {
-        throw new Error('Tweet not found');
+        throw new ServiceError(
+          "Tweet not found",
+          "The specified tweet does not exist",
+          StatusCodes.NOT_FOUND
+        );
       }
-  
+
       // Delete images from Firebase Storage
       if (tweet.images && tweet.images.length > 0) {
         await this.#deleteImagesFromStorage(tweet.images);
       }
-  
+
       // Get all comments associated with the tweet
-      const commentsOfTweet = await this.commentRepository.getById({_id: id});
-  
+      const commentsOfTweet = await this.commentRepository.getById({ _id: id });
+
       // Recursively delete comments and their likes
       await this.#deleteCommentsRecursively(commentsOfTweet);
-  
+
       // Delete the tweet from the database
       await this.tweetRepository.deleteTweet(id);
-  
+
       // Remove tweet reference from hashtags
       await this.hashtagRepository.removeTweetFromHashtags(id);
-  
+
       // Delete the likes associated with the tweet
       await this.likeRepository.delete(id);
-  
-      return { message: 'Tweet and all associated data deleted successfully' };
-  
+
+      return { message: "Tweet and all associated data deleted successfully" };
     } catch (error) {
-      console.error('Error deleting tweet:', error);
-      throw new Error('Failed to delete tweet');
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to delete tweet",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Tweet deletion failed",
+        "An error occurred while deleting the tweet",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
     }
   }
-  
-  
 }
 
 export default TweetService;

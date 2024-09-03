@@ -1,13 +1,14 @@
-import CrudService from "./crud.service.js";
 import {
   CommentRepository,
   TweetRepository,
 } from "../repository/index.repository.js";
+import { ServiceError, DatabaseError } from "../error/custom.error.js";
+import { responseCodes } from "../utils/imports.util.js";
+const { StatusCodes } = responseCodes;
 
-class CommentService extends CrudService {
+class CommentService {
   constructor() {
-    const commentRepository = CommentRepository.getInstance();
-    super(commentRepository);
+    this.commentRepository = CommentRepository.getInstance();
     this.tweetRepository = TweetRepository.getInstance();
   }
 
@@ -20,22 +21,24 @@ class CommentService extends CrudService {
 
   async create(data) {
     try {
-      // Check if the Model Id exists
       let isExists;
       if (data.modelType === "Tweet") {
         isExists = await this.tweetRepository.getTweetById(data.modelId);
       } else if (data.modelType === "Comment") {
-        isExists = await this.repository.getById({
+        isExists = await this.commentRepository.getById({
           _id: data.modelId,
         });
       }
 
       if (!isExists) {
-        throw new Error("Model Id not found");
+        throw new ServiceError(
+          "Model not found",
+          "The specified model does not exist",
+          StatusCodes.NOT_FOUND
+        );
       }
 
-      // Create the comment
-      const comment = await this.repository.create({
+      const comment = await this.commentRepository.create({
         content: data.content,
         onModel: data.modelType,
         commentable: data.modelId,
@@ -43,16 +46,16 @@ class CommentService extends CrudService {
         comments: [],
       });
 
-      // Update the Model Id with the created comment
       if (data.modelType === "Tweet") {
-        this.tweetRepository.updateTweet(data.modelId, {
+        await this.tweetRepository.updateTweet(data.modelId, {
           $inc: { countOfComments: 1 },
         });
       } else if (data.modelType === "Comment") {
-        this.repository.update(data.modelId, {
+        await this.commentRepository.update(data.modelId, {
           $push: { comments: comment._id },
         });
       }
+
       return {
         content: comment.content,
         modelType: comment.onModel,
@@ -60,8 +63,21 @@ class CommentService extends CrudService {
         userId: comment.userId,
       };
     } catch (error) {
-      console.log(error, "Error in Comment Service while creating");
-      throw new Error(`Error in Comment Service while creating: ${error}`);
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to create comment",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Comment creation failed",
+        "An error occurred while creating the comment",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
     }
   }
 }

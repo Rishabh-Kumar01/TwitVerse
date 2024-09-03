@@ -3,13 +3,13 @@ import {
   TweetRepository,
   CommentRepository,
 } from "../repository/index.repository.js";
-import CrudService from "./crud.service.js";
-import { mongoose } from "../utils/imports.util.js";
+import { ServiceError, DatabaseError } from "../error/custom.error.js";
+import { responseCodes } from "../utils/imports.util.js";
+const { StatusCodes } = responseCodes;
 
-class LikeService extends CrudService {
+class LikeService {
   constructor() {
-    const likeRepository = LikeRepository.getInstance();
-    super(likeRepository);
+    this.likeRepository = LikeRepository.getInstance();
     this.tweetRepository = TweetRepository.getInstance();
     this.commentRepository = CommentRepository.getInstance();
   }
@@ -23,7 +23,6 @@ class LikeService extends CrudService {
 
   async toggleLike(data) {
     try {
-      // Check if the tweet exists
       let modelIdExists;
 
       if (data.modelType === "Tweet") {
@@ -35,30 +34,28 @@ class LikeService extends CrudService {
           _id: data.modelId,
         });
       }
-      
+
       if (!modelIdExists) {
-        throw new Error("Model Id does not exist");
+        throw new ServiceError(
+          "Model not found",
+          "The specified model does not exist",
+          StatusCodes.NOT_FOUND
+        );
       }
 
-      // Check if the like already exists
-      let isExists;
+      let isExists = await this.likeRepository.getById({
+        userId: data.userId,
+        likeable: data.modelId,
+      });
 
-      if (data.modelType === "Tweet") {
-        isExists = await this.repository.getById({
-          userId: data.userId,
-          likeable: data.modelId,
-        });
-      } else if (data.modelType === "Comment") {
-        isExists = await this.repository.getById({
-          userId: data.userId,
-          likeable: data.modelId,
-        });
-      }
       if (isExists) {
-        // If like exists, delete it and reduce the like count by 1
-        const response = await this.repository.delete(isExists._id);
+        const response = await this.likeRepository.delete(isExists._id);
         if (response.deletedCount === 0) {
-          throw new Error("Like not deleted");
+          throw new ServiceError(
+            "Like not deleted",
+            "Failed to remove the like",
+            StatusCodes.INTERNAL_SERVER_ERROR
+          );
         }
 
         if (data.modelType === "Tweet") {
@@ -80,14 +77,17 @@ class LikeService extends CrudService {
           },
         };
       } else {
-        // If like does not exist, create it and increase the like count by 1
-        const response = await this.repository.create({
+        const response = await this.likeRepository.create({
           userId: data.userId,
           likeable: data.modelId,
           onModel: data.modelType,
         });
         if (!response) {
-          throw new Error("Like not created");
+          throw new ServiceError(
+            "Like not created",
+            "Failed to create the like",
+            StatusCodes.INTERNAL_SERVER_ERROR
+          );
         }
 
         if (data.modelType === "Tweet") {
@@ -110,9 +110,20 @@ class LikeService extends CrudService {
         };
       }
     } catch (error) {
-      console.log(error, "Error in Like Service while toggling like");
-      throw new Error(
-        `Error in Like Service while toggling like: ${error.message}`
+      if (error instanceof DatabaseError) {
+        throw new ServiceError(
+          "Failed to toggle like",
+          error.explanation,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Like toggle failed",
+        "An error occurred while toggling the like",
+        StatusCodes.INTERNAL_SERVER_ERROR
       );
     }
   }

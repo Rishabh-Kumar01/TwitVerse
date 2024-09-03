@@ -1,14 +1,15 @@
+import CrudService from "./crud.service.js";
 import {
   CommentRepository,
   TweetRepository,
 } from "../repository/index.repository.js";
-import { ServiceError, DatabaseError } from "../error/custom.error.js";
+import { ServiceError } from "../error/custom.error.js";
 import { responseCodes } from "../utils/imports.util.js";
 const { StatusCodes } = responseCodes;
 
-class CommentService {
+class CommentService extends CrudService {
   constructor() {
-    this.commentRepository = CommentRepository.getInstance();
+    super(CommentRepository.getInstance());
     this.tweetRepository = TweetRepository.getInstance();
   }
 
@@ -25,7 +26,7 @@ class CommentService {
       if (data.modelType === "Tweet") {
         isExists = await this.tweetRepository.getTweetById(data.modelId);
       } else if (data.modelType === "Comment") {
-        isExists = await this.commentRepository.getById({
+        isExists = await this.repository.getById({
           _id: data.modelId,
         });
       }
@@ -38,7 +39,7 @@ class CommentService {
         );
       }
 
-      const comment = await this.commentRepository.create({
+      const comment = await this.repository.create({
         content: data.content,
         onModel: data.modelType,
         commentable: data.modelId,
@@ -51,7 +52,7 @@ class CommentService {
           $inc: { countOfComments: 1 },
         });
       } else if (data.modelType === "Comment") {
-        await this.commentRepository.update(data.modelId, {
+        await this.repository.update(data.modelId, {
           $push: { comments: comment._id },
         });
       }
@@ -63,13 +64,6 @@ class CommentService {
         userId: comment.userId,
       };
     } catch (error) {
-      if (error instanceof DatabaseError) {
-        throw new ServiceError(
-          "Failed to create comment",
-          error.explanation,
-          StatusCodes.INTERNAL_SERVER_ERROR
-        );
-      }
       if (error instanceof ServiceError) {
         throw error;
       }

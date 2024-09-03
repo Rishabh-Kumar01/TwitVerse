@@ -1,8 +1,7 @@
 import { UserRepository } from "../repository/index.repository.js";
 import CrudService from "./crud.service.js";
-import {jwt, bcrypt} from "../utils/imports.util.js"
-import {serverConfig} from "../config/serverConfig.js"
-
+import { jwt, bcrypt } from "../utils/imports.util.js";
+import { serverConfig } from "../config/serverConfig.js";
 
 class UserService extends CrudService {
   constructor() {
@@ -40,7 +39,7 @@ class UserService extends CrudService {
 
   async logIn(email, password) {
     try {
-      console.log("service", email, password)
+      console.log("service", email, password);
       const user = await this.userRepository.findByEmail(email);
 
       if (!user) {

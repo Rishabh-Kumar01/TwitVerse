@@ -1,4 +1,4 @@
-import {multer} from "../utils/imports.util.js"
+import { multer } from "../utils/imports.util.js";
 
 const storage = multer.memoryStorage();
 const multerUpload = multer({

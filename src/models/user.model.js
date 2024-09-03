@@ -1,5 +1,5 @@
 import { mongoose, bcrypt } from "../utils/imports.util.js";
-import {serverConfig} from "../config/index.config.js"
+import { serverConfig } from "../config/index.config.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -41,12 +41,12 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.pre("save", function(next) {
+userSchema.pre("save", function (next) {
   const user = this;
-  const hashedPassword = bcrypt.hashSync(user.password, serverConfig.SALT)
+  const hashedPassword = bcrypt.hashSync(user.password, serverConfig.SALT);
   user.password = hashedPassword;
-  next()
-})
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 export default User;

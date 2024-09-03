@@ -4,9 +4,9 @@ import {
   UserController,
   LikeController,
   CommentController,
-} from "../../controllers/index.controller.js";
-import {authenticate} from "../../middlewares/index.middleware.js"
-import {multerUpload} from "../../config/index.config.js"
+} from "../../controller/index.controller.js";
+import { authenticate } from "../../middleware/index.middleware.js";
+import { multerUpload } from "../../config/index.config.js";
 
 const router = express.Router();
 
@@ -31,11 +31,20 @@ const router = express.Router();
 //   },
 //   "error": []
 // }
-router.post("/tweets", authenticate, multerUpload.array("images", 5),  TweetController.createTweet);
+router.post(
+  "/tweets",
+  authenticate,
+  multerUpload.array("images", 5),
+  TweetController.createTweet
+);
 
 // POST - api/v1/upload-image
 // Upload an image
-router.post("/upload-image", multerUpload.array("images", 5), TweetController.uploadImage);
+router.post(
+  "/upload-image",
+  multerUpload.array("images", 5),
+  TweetController.uploadImage
+);
 
 // GET - api/v1/tweets
 // Get all tweets
@@ -53,19 +62,19 @@ router.post("/signup", UserController.signUp);
 
 // POST - api/v1/login
 // Login User
-router.post("/login", UserController.logIn)
+router.post("/login", UserController.logIn);
 
 // Like
 
 // POST - api/v1/toggle-likes
 // Toggle like on a tweet, comment
-router.post("/toggle-likes", authenticate,  LikeController.toggleLike);
+router.post("/toggle-likes", authenticate, LikeController.toggleLike);
 
 // Comment
 
 // POST - api/v1/comments
 // Create a new comment
-router.post("/comments",authenticate, CommentController.createComment);
+router.post("/comments", authenticate, CommentController.createComment);
 
 // GET - api/v1/comments/:id
 // Get a comment by id

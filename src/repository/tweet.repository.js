@@ -1,5 +1,6 @@
 import { Tweet } from "../models/index.js";
 import CrudRepository from "./crud.repository.js";
+import { DatabaseError } from "../error/custom.error.js";
 
 class TweetRepository extends CrudRepository {
   constructor() {
@@ -14,48 +15,72 @@ class TweetRepository extends CrudRepository {
   }
 
   async createTweet(data) {
-    console.log(data);
-    const tweet = await Tweet.create({
-      content: data.content,
-      images: data.images
-    });
-    return tweet;
+    try {
+      console.log(data);
+      const tweet = await Tweet.create({
+        content: data.content,
+        images: data.images,
+      });
+      return tweet;
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
   }
 
   async getTweetById(id) {
-    return Tweet.findById(id);
+    try {
+      return await Tweet.findById(id);
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
   }
 
   async getTweets() {
-    return Tweet.findAll();
+    try {
+      return await Tweet.find();
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
   }
 
   async updateTweet(id, data) {
-    const tweet = await Tweet.findOneAndUpdate(
-      {
-        _id: id,
-      },
-      data,
-      { new: true }
-    );
-    return tweet;
+    try {
+      const tweet = await Tweet.findOneAndUpdate(
+        {
+          _id: id,
+        },
+        data,
+        { new: true }
+      );
+      return tweet;
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
   }
 
   async updateLikeCount(id, value) {
-    const tweet = await Tweet.findOneAndUpdate(
-      {
-        _id: id,
-      },
-      {
-        $inc: { countOfLikes: value },
-      },
-      { new: true }
-    );
-    return tweet;
+    try {
+      const tweet = await Tweet.findOneAndUpdate(
+        {
+          _id: id,
+        },
+        {
+          $inc: { countOfLikes: value },
+        },
+        { new: true }
+      );
+      return tweet;
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
   }
 
   async deleteTweet(id) {
-    return await Tweet.findByIdAndDelete({ _id: id });
+    try {
+      return await Tweet.findByIdAndDelete({ _id: id });
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
   }
 }
 

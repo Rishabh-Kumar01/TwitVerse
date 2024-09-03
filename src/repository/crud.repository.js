@@ -1,3 +1,5 @@
+import { DatabaseError } from "../error/custom.error.js";
+
 class CrudRepository {
   constructor(model) {
     this.model = model;
@@ -5,50 +7,52 @@ class CrudRepository {
 
   async create(data) {
     try {
-      const newData = this.model.create(data);
+      const newData = await this.model.create(data);
       return newData;
     } catch (error) {
-      throw new Error(`Error in Crud Repository while creating: ${error}`);
+      throw new DatabaseError(error);
     }
   }
 
   async getById(data) {
     try {
-      const response = this.model.findOne(data);
+      const response = await this.model.findOne(data);
       return response;
     } catch (error) {
       console.log(error, "Error in Crud Repository while getting by id");
-      throw new Error(`Error in Crud Repository while getting by id: ${error}`);
+      throw new DatabaseError(error);
     }
   }
 
   async getAll() {
     try {
-      const data = this.model.find();
+      const data = await this.model.find();
       return data;
     } catch (error) {
       console.log(error, "Error in Crud Repository while getting all");
-      throw new Error(`Error in Crud Repository while getting all: ${error}`);
+      throw new DatabaseError(error);
     }
   }
 
   async update(id, data) {
     try {
-      const updatedData = this.model.findByIdAndUpdate(id, data, { new: true });
+      const updatedData = await this.model.findByIdAndUpdate(id, data, {
+        new: true,
+      });
       return updatedData;
     } catch (error) {
       console.log(error, "Error in Crud Repository while updating");
-      throw new Error(`Error in Crud Repository while updating: ${error}`);
+      throw new DatabaseError(error);
     }
   }
 
   async delete(id) {
     try {
-      const deletedData = this.model.findByIdAndDelete(id);
+      const deletedData = await this.model.findByIdAndDelete(id);
       return deletedData;
     } catch (error) {
       console.log(error, "Error in Crud Repository while deleting");
-      throw new Error(`Error in Crud Repository while deleting: ${error}`);
+      throw new DatabaseError(error);
     }
   }
 }

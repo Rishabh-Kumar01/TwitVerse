@@ -1,5 +1,6 @@
 import CrudRepository from "./crud.repository.js";
 import { Like } from "../models/index.js";
+import { DatabaseError } from "../error/custom.error.js";
 
 class LikeRepository extends CrudRepository {
   constructor() {
@@ -26,9 +27,7 @@ class LikeRepository extends CrudRepository {
         error,
         "Error in Like Repository while getting by user id and tweet id"
       );
-      throw new Error(
-        `Error in Like Repository while getting by user id and tweet id: ${error}`
-      );
+      throw new DatabaseError(error);
     }
   }
 
@@ -38,7 +37,7 @@ class LikeRepository extends CrudRepository {
       return deletedData;
     } catch (error) {
       console.log(error, "Error in Like Repository while deleting");
-      throw new Error(`Error in Like Repository while deleting: ${error}`);
+      throw new DatabaseError(error);
     }
   }
 }

@@ -1,6 +1,7 @@
 import CrudRepository from "./crud.repository.js";
 import { Comment } from "../models/index.js";
 import { mongoose } from "../utils/imports.util.js";
+import { DatabaseError } from "../error/custom.error.js";
 
 class CommentRepository extends CrudRepository {
   constructor() {
@@ -20,7 +21,7 @@ class CommentRepository extends CrudRepository {
       return deletedData;
     } catch (error) {
       console.log(error, "Error in Comment Repository while deleting");
-      throw new Error(`Error in Comment Repository while deleting: ${error}`);
+      throw new DatabaseError(error);
     }
   }
 
@@ -94,9 +95,7 @@ class CommentRepository extends CrudRepository {
         error,
         "Error in Comment Repository while getting comments for tweet"
       );
-      throw new Error(
-        `Error in Comment Repository while getting comments for tweet: ${error}`
-      );
+      throw new DatabaseError(error);
     }
   }
 

@@ -5,7 +5,7 @@ import Hashtag from "../models/hashtag.model.js";
 import Comment from "../models/comment.model.js";
 import Like from "../models/like.model.js";
 import { ServiceError, DatabaseError } from "../error/custom.error.js";
-import { responseCodes } from "../utils/imports.util.js";
+import { responseCodes, mongoose } from "../utils/imports.util.js";
 const { StatusCodes } = responseCodes;
 
 class SeedService {
@@ -17,20 +17,32 @@ class SeedService {
   }
 
   async seedData(count = 10) {
-    try {
-      const users = await this.seedUsers(count);
-      const hashtags = await this.seedHashtags(Math.floor(count / 2));
-      const tweets = await this.seedTweets(count * 2, users, hashtags);
-      await this.seedComments(count * 3, users, tweets);
-      await this.seedLikes(count * 5, users, tweets);
+    const session = await mongoose.startSession();
 
-      return {
-        users: count,
-        hashtags: Math.floor(count / 2),
-        tweets: count * 2,
-        comments: count * 3,
-        likes: count * 5,
-      };
+    try {
+      return await session.withTransaction(async () => {
+        const users = await this.seedUsers(count, session);
+        const hashtags = await this.seedHashtags(
+          Math.floor(count / 2),
+          session
+        );
+        const tweets = await this.seedTweets(
+          count * 2,
+          users,
+          hashtags,
+          session
+        );
+        await this.seedComments(count * 3, users, tweets, session);
+        await this.seedLikes(count * 5, users, tweets, session);
+
+        return {
+          users: users.length,
+          hashtags: hashtags.length,
+          tweets: tweets.length,
+          comments: count * 3,
+          likes: count * 5,
+        };
+      });
     } catch (error) {
       if (error instanceof DatabaseError) {
         throw new ServiceError(
@@ -44,10 +56,11 @@ class SeedService {
         "An error occurred while seeding the database",
         StatusCodes.INTERNAL_SERVER_ERROR
       );
+    } finally {
+      session.endSession();
     }
   }
-
-  async seedUsers(count) {
+  async seedUsers(count, session) {
     try {
       const users = [];
       for (let i = 0; i < count; i++) {
@@ -56,7 +69,7 @@ class SeedService {
           email: faker.internet.email(),
           password: faker.internet.password(),
         });
-        users.push(await user.save());
+        users.push(await user.save({ session }));
       }
       return users;
     } catch (error) {
@@ -67,21 +80,22 @@ class SeedService {
     }
   }
 
-  async seedHashtags(count) {
+  async seedHashtags(count, session) {
     try {
       const hashtags = [];
       let attempts = 0;
-      const maxAttempts = count * 2; // Allow more attempts to find unique hashtags
+      const maxAttempts = count * 2;
 
       while (hashtags.length < count && attempts < maxAttempts) {
         const title = faker.word.sample().toLowerCase();
 
-        // Check if hashtag already exists
-        const existingHashtag = await Hashtag.findOne({ title });
+        const existingHashtag = await Hashtag.findOne({ title }).session(
+          session
+        );
 
         if (!existingHashtag) {
           const hashtag = new Hashtag({ title });
-          const savedHashtag = await hashtag.save();
+          const savedHashtag = await hashtag.save({ session });
           hashtags.push(savedHashtag);
         }
 
@@ -96,7 +110,6 @@ class SeedService {
 
       return hashtags;
     } catch (error) {
-      console.log(error, "error");
       throw new DatabaseError({
         explanation: "Failed to seed hashtags",
         message: error.message,
@@ -104,7 +117,7 @@ class SeedService {
     }
   }
 
-  async seedTweets(count, users, hashtags) {
+  async seedTweets(count, users, hashtags, session) {
     try {
       const tweets = [];
       for (let i = 0; i < count; i++) {
@@ -117,10 +130,10 @@ class SeedService {
           const hashtag = faker.helpers.arrayElement(hashtags);
           tweet.content += ` #${hashtag.title}`;
           hashtag.tweets.push(tweet._id);
-          await hashtag.save();
+          await hashtag.save({ session });
         }
 
-        tweets.push(await tweet.save());
+        tweets.push(await tweet.save({ session }));
       }
       return tweets;
     } catch (error) {
@@ -131,16 +144,23 @@ class SeedService {
     }
   }
 
-  async seedComments(count, users, tweets) {
+  async seedComments(count, users, tweets, session) {
     try {
       for (let i = 0; i < count; i++) {
+        const tweet = faker.helpers.arrayElement(tweets);
         const comment = new Comment({
           content: faker.lorem.sentence(),
           onModel: "Tweet",
-          commentable: faker.helpers.arrayElement(tweets)._id,
+          commentable: tweet._id,
           userId: faker.helpers.arrayElement(users)._id,
         });
-        await comment.save();
+        await comment.save({ session });
+
+        await Tweet.findByIdAndUpdate(
+          tweet._id,
+          { $inc: { countOfComments: 1 } },
+          { session }
+        );
       }
     } catch (error) {
       throw new DatabaseError({
@@ -150,15 +170,22 @@ class SeedService {
     }
   }
 
-  async seedLikes(count, users, tweets) {
+  async seedLikes(count, users, tweets, session) {
     try {
       for (let i = 0; i < count; i++) {
+        const tweet = faker.helpers.arrayElement(tweets);
         const like = new Like({
           onModel: "Tweet",
-          likeable: faker.helpers.arrayElement(tweets)._id,
+          likeable: tweet._id,
           userId: faker.helpers.arrayElement(users)._id,
         });
-        await like.save();
+        await like.save({ session });
+
+        await Tweet.findByIdAndUpdate(
+          tweet._id,
+          { $inc: { countOfLikes: 1 } },
+          { session }
+        );
       }
     } catch (error) {
       throw new DatabaseError({

@@ -20,7 +20,7 @@ class HashtagRepository {
 
   async getHashtagById(id) {
     try {
-      return await Hashtag.findById(id);
+      return await Hashtag.findById(id).read("secondary");
     } catch (error) {
       throw new DatabaseError(error);
     }
@@ -30,7 +30,7 @@ class HashtagRepository {
     try {
       return await Hashtag.find({
         title: { $in: data },
-      });
+      }).read("secondary");
     } catch (error) {
       throw new DatabaseError(error);
     }

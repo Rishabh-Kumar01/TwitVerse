@@ -8,11 +8,13 @@ import compression from "compression";
 import expressValidator from "express-validator";
 import bodyParser from "body-parser";
 import bcrypt from "bcrypt";
-import jwt from 'jsonwebtoken'
-import responseCodes from 'http-status-codes'
-import passportJWT from 'passport-jwt'
+import jwt from "jsonwebtoken";
+import responseCodes from "http-status-codes";
+import passportJWT from "passport-jwt";
 import passport from "passport";
-import multer from 'multer'
+import multer from "multer";
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
 export {
   mongoose,
@@ -25,9 +27,11 @@ export {
   dotenv,
   bodyParser,
   bcrypt,
-  jwt, 
+  jwt,
   responseCodes,
   passportJWT,
   passport,
-  multer
+  multer,
+  swaggerJsdoc,
+  swaggerUi,
 };

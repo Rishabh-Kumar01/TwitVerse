@@ -4,7 +4,6 @@ import {
   compression,
   helmet,
   cors,
-  bodyParser,
   passport,
 } from "./utils/imports.util.js";
 import baseError from "../src/error/base.error.js";
@@ -14,6 +13,7 @@ import {
   passportAuth,
 } from "./config/index.config.js";
 import routes from "./route/index.route.js";
+import { swaggerUi, specs } from "./swagger/swagger.js";
 
 const app = express();
 
@@ -41,6 +41,9 @@ const serverStart = async () => {
     app.get("/", (request, response) => {
       response.send("Hello Server From TwitVerse!!!😊😊😊😊");
     });
+
+    // Swagger Docs
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
     app.use((req, res, next) => {
       res.status(404).json({

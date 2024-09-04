@@ -6,6 +6,40 @@ const { StatusCodes } = responseCodes;
 
 const tweetService = TweetService.getInstance();
 
+/**
+ * @swagger
+ * /v1/tweets:
+ *   post:
+ *     summary: Create a new tweet
+ *     tags: [Tweets]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Tweet created successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
 const createTweet = async (req, res, next) => {
   try {
     if (!req.body.content) {
@@ -41,6 +75,38 @@ const createTweet = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /v1/upload-image:
+ *   post:
+ *     summary: Upload images
+ *     tags: [Tweets]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - images
+ *             properties:
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Images uploaded successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
 const uploadImage = async (req, res, next) => {
   try {
     if (!req.files) {
@@ -64,6 +130,18 @@ const uploadImage = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /v1/tweets:
+ *   get:
+ *     summary: Get all tweets
+ *     tags: [Tweets]
+ *     responses:
+ *       200:
+ *         description: Tweets retrieved successfully
+ *       500:
+ *         description: Server error
+ */
 const getTweets = async (req, res, next) => {
   try {
     const tweets = await tweetService.getTweets();
@@ -77,6 +155,30 @@ const getTweets = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /v1/tweets/{id}:
+ *   delete:
+ *     summary: Delete a tweet
+ *     tags: [Tweets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Tweet deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Tweet not found
+ *       500:
+ *         description: Server error
+ */
 const deleteTweet = async (req, res, next) => {
   try {
     const tweetId = req.params.id;

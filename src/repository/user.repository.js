@@ -18,11 +18,8 @@ class UserRepository extends CrudRepository {
     try {
       const user = await User.findOne({
         email: email,
-      });
-      if (!user) {
-        console.log("User Not Found");
-        throw new DatabaseError("User not found");
-      }
+      }).read("secondary");
+
       return user;
     } catch (error) {
       console.log("Something Went Wrong: User Repository: Find User By Email");

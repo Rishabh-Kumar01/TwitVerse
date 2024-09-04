@@ -19,7 +19,7 @@ class LikeRepository extends CrudRepository {
       const response = await Like.findOne({
         userId: userId,
         likeable: likeable,
-      });
+      }).read("secondary");
 
       return response;
     } catch (error) {

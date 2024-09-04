@@ -29,7 +29,7 @@ class TweetRepository extends CrudRepository {
 
   async getTweetById(id) {
     try {
-      return await Tweet.findById(id);
+      return await Tweet.findById(id).read("secondary");
     } catch (error) {
       throw new DatabaseError(error);
     }
@@ -37,7 +37,7 @@ class TweetRepository extends CrudRepository {
 
   async getTweets() {
     try {
-      return await Tweet.find();
+      return await Tweet.find().read("secondary");
     } catch (error) {
       throw new DatabaseError(error);
     }

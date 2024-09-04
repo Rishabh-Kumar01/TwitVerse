@@ -16,7 +16,7 @@ class CrudRepository {
 
   async getById(data) {
     try {
-      const response = await this.model.findOne(data);
+      const response = await this.model.findOne(data).read("secondary");
       return response;
     } catch (error) {
       console.log(error, "Error in Crud Repository while getting by id");
@@ -26,7 +26,7 @@ class CrudRepository {
 
   async getAll() {
     try {
-      const data = await this.model.find();
+      const data = await this.model.find().read("secondary");
       return data;
     } catch (error) {
       console.log(error, "Error in Crud Repository while getting all");

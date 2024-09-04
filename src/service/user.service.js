@@ -43,8 +43,21 @@ class UserService {
 
   async create(userData) {
     try {
+      const userExists = await this.userRepository.findByEmail(userData.email);
+      if (userExists) {
+        throw new ServiceError(
+          "User already exists",
+          "A user with the provided email already exists",
+          StatusCodes.CONFLICT
+        );
+      }
+
       const user = await this.userRepository.create(userData);
-      return user;
+      return {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+      };
     } catch (error) {
       if (error instanceof DatabaseError) {
         throw new ServiceError(
@@ -53,6 +66,11 @@ class UserService {
           StatusCodes.INTERNAL_SERVER_ERROR
         );
       }
+
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+
       throw new ServiceError(
         "User creation failed",
         "An error occurred while creating the user",

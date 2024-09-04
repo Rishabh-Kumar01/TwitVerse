@@ -18,32 +18,26 @@ class SeedService {
 
   async seedData(count = 10) {
     const session = await mongoose.startSession();
+    session.startTransaction();
 
     try {
-      return await session.withTransaction(async () => {
-        const users = await this.seedUsers(count, session);
-        const hashtags = await this.seedHashtags(
-          Math.floor(count / 2),
-          session
-        );
-        const tweets = await this.seedTweets(
-          count * 2,
-          users,
-          hashtags,
-          session
-        );
-        await this.seedComments(count * 3, users, tweets, session);
-        await this.seedLikes(count * 5, users, tweets, session);
+      const users = await this.seedUsers(count, session);
+      const hashtags = await this.seedHashtags(Math.floor(count / 2), session);
+      const tweets = await this.seedTweets(count * 2, users, hashtags, session);
+      await this.seedComments(count * 3, users, tweets, session);
+      await this.seedLikes(count * 5, users, tweets, session);
 
-        return {
-          users: users.length,
-          hashtags: hashtags.length,
-          tweets: tweets.length,
-          comments: count * 3,
-          likes: count * 5,
-        };
-      });
+      await session.commitTransaction();
+
+      return {
+        users: users.length,
+        hashtags: hashtags.length,
+        tweets: tweets.length,
+        comments: count * 3,
+        likes: count * 5,
+      };
     } catch (error) {
+      await session.abortTransaction();
       if (error instanceof DatabaseError) {
         throw new ServiceError(
           "Seeding failed",
@@ -60,6 +54,7 @@ class SeedService {
       session.endSession();
     }
   }
+
   async seedUsers(count, session) {
     try {
       const users = [];
@@ -89,9 +84,9 @@ class SeedService {
       while (hashtags.length < count && attempts < maxAttempts) {
         const title = faker.word.sample().toLowerCase();
 
-        const existingHashtag = await Hashtag.findOne({ title }).session(
-          session
-        );
+        const existingHashtag = await Hashtag.findOne({ title })
+          .session(session)
+          .read("primary"); // Ensure primary read preference
 
         if (!existingHashtag) {
           const hashtag = new Hashtag({ title });
@@ -159,8 +154,8 @@ class SeedService {
         await Tweet.findByIdAndUpdate(
           tweet._id,
           { $inc: { countOfComments: 1 } },
-          { session }
-        );
+          { session, new: true }
+        ).read("primary"); // Ensure primary read preference
       }
     } catch (error) {
       throw new DatabaseError({
@@ -184,8 +179,8 @@ class SeedService {
         await Tweet.findByIdAndUpdate(
           tweet._id,
           { $inc: { countOfLikes: 1 } },
-          { session }
-        );
+          { session, new: true }
+        ).read("primary"); // Ensure primary read preference
       }
     } catch (error) {
       throw new DatabaseError({

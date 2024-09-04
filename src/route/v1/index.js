@@ -4,11 +4,15 @@ import {
   UserController,
   LikeController,
   CommentController,
+  SeedController
 } from "../../controller/index.controller.js";
 import { authenticate } from "../../middleware/index.middleware.js";
 import { multerUpload } from "../../config/index.config.js";
 
 const router = express.Router();
+
+// Seed the database
+router.get("/seed", SeedController.seedData);
 
 // Tweets
 

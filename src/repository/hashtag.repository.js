@@ -29,7 +29,7 @@ class HashtagRepository {
   async getHashtags(data) {
     try {
       return await Hashtag.find({
-        name: { $in: data },
+        title: { $in: data },
       });
     } catch (error) {
       throw new DatabaseError(error);

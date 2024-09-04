@@ -80,8 +80,8 @@ class TweetService {
         hashtags
       );
 
-      // Update the existed hashtags with the new tweet id and not requirement to wait for the result
-      const existedHashtagsNames = existedHashtags.map((tag) => tag.name);
+      // Update the existed hashtags by pushing the new tweet id and not requirement to wait for the result
+      const existedHashtagsNames = existedHashtags.map((tag) => tag.title);
       const existedHashtagsIds = existedHashtags.map((tag) => tag._id);
       await this.hashtagRepository.updateHashTags(existedHashtagsIds, {
         tweet: tweet._id,
@@ -92,7 +92,7 @@ class TweetService {
         hashtags.filter((tag) => !existedHashtagsNames.includes(tag))
       );
       const newHashtagsObjects = Array.from(newHashtagsSet).map((tag) => ({
-        name: tag,
+        title: tag,
         tweets: [tweet._id],
       }));
       await this.hashtagRepository.createHashtags(newHashtagsObjects);

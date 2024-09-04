@@ -2,7 +2,7 @@ import { mongoose } from "../utils/imports.util.js";
 
 const hashtagSchema = new mongoose.Schema(
   {
-    name: {
+    title: {
       type: String,
       required: true,
       trim: true,

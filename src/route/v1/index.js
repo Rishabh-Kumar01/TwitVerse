@@ -110,6 +110,8 @@ router.post(
  */
 router.get("/tweets", TweetController.getTweets);
 
+router.get("/tweets/:id", TweetController.getTweetById);
+
 /**
  * @swagger
  * /api/v1/tweets/{id}:

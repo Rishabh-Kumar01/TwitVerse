@@ -155,6 +155,20 @@ const getTweets = async (req, res, next) => {
   }
 };
 
+const getTweetById = async (req, res, next) => {
+  try {
+    const tweetId = req.params.id;
+    const tweet = await tweetService.getTweetById(tweetId);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Tweet retrieved successfully",
+      data: tweet,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 /**
  * @swagger
  * /v1/tweets/{id}:
@@ -182,15 +196,15 @@ const getTweets = async (req, res, next) => {
 const deleteTweet = async (req, res, next) => {
   try {
     const tweetId = req.params.id;
-    const response = await tweetService.deleteTweet(tweetId);
+    await tweetService.deleteTweet(tweetId);
     res.status(StatusCodes.OK).json({
       success: true,
-      message: response.message || "Tweet deleted successfully",
-      data: response,
+      message: "Tweet deleted successfully",
+      data: [],
     });
   } catch (error) {
     next(error);
   }
 };
 
-export { createTweet, getTweets, uploadImage, deleteTweet };
+export { createTweet, getTweets, uploadImage, deleteTweet, getTweetById };

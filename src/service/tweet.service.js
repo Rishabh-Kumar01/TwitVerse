@@ -6,7 +6,7 @@ import {
 } from "../repository/index.repository.js";
 import { ServiceError, DatabaseError } from "../error/custom.error.js";
 import { responseCodes } from "../utils/imports.util.js";
-import { firebaseConfig } from "../config/index.config.js";
+import { firebaseConfig, redisClient } from "../config/index.config.js";
 import {
   ref,
   uploadBytes,
@@ -97,13 +97,20 @@ class TweetService {
       }));
       await this.hashtagRepository.createHashtags(newHashtagsObjects);
 
-      return {
-        id: tweet._id,
-        content: tweet.content,
-        images: tweet.images,
-        createdAt: tweet.createdAt,
-        updatedAt: tweet.updatedAt,
+      const tweetReturn = {
+        tweetId: tweet?._id,
+        content: tweet?.content,
+        images: tweet?.images,
+        createdAt: tweet?.createdAt,
+        updatedAt: tweet?.updatedAt,
       };
+
+      // Cache the new tweet in Redis
+      await redisClient.set(`tweet:${tweet._id}`, JSON.stringify(tweetReturn), {
+        EX: 3600, // Expire after 1 hour
+      });
+
+      return tweetReturn;
     } catch (error) {
       if (error instanceof DatabaseError) {
         throw new ServiceError(
@@ -144,6 +151,12 @@ class TweetService {
 
   async getTweetById(id) {
     try {
+      const cachedTweet = await redisClient.get(`tweet:${id}`);
+      if (cachedTweet) {
+        return JSON.parse(cachedTweet);
+      }
+
+      // If not in Redis, get from database
       const tweet = await this.tweetRepository.getTweetById(id);
       if (!tweet) {
         throw new ServiceError(
@@ -152,8 +165,25 @@ class TweetService {
           StatusCodes.NOT_FOUND
         );
       }
-      return tweet;
+
+      const tweetReturn = {
+        tweetId: tweet?._id,
+        content: tweet?.content,
+        countOfLikes: tweet?.countOfLikes,
+        countOfComments: tweet?.countOfComments,
+        images: tweet?.images,
+        createdAt: tweet?.createdAt,
+        updatedAt: tweet?.updatedAt,
+      };
+
+      // Cache the tweet in Redis
+      await redisClient.set(`tweet:${id}`, JSON.stringify(tweetReturn), {
+        EX: 3600, // Expire after 1 hour
+      });
+
+      return tweetReturn;
     } catch (error) {
+      console.log(error);
       if (error instanceof DatabaseError) {
         throw new ServiceError(
           "Failed to retrieve tweet",
@@ -248,7 +278,8 @@ class TweetService {
       // Delete the likes associated with the tweet
       await this.likeRepository.delete(id);
 
-      return { message: "Tweet and all associated data deleted successfully" };
+      // Remove the tweet from Redis cache
+      await redisClient.del(`tweet:${id}`);
     } catch (error) {
       if (error instanceof DatabaseError) {
         throw new ServiceError(

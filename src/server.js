@@ -12,7 +12,7 @@ import {
   dbConnect,
   passportAuth,
   swaggerConfig,
-  redisConfig,
+  redisClient,
 } from "./config/index.config.js";
 import routes from "./route/index.route.js";
 
@@ -25,7 +25,7 @@ const serverStart = async () => {
   await dbConnect();
 
   // Redis Connection
-  await redisConfig.redisConnect();
+  await redisClient.connect();
 
   // Middlewares
   try {

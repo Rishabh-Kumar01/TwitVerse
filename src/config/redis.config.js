@@ -3,23 +3,37 @@ import { serverConfig } from "./serverConfig.js";
 
 const { createClient } = redis;
 
-let redisClient;
+class RedisClient {
+  constructor() {
+    this.client = null;
+  }
 
-const redisConnect = async () => {
-  try {
-    redisClient = createClient({
+  async connect() {
+    this.client = createClient({
       url: serverConfig.REDIS_URL || "redis://localhost:6379",
     });
 
-    redisClient.on("error", (err) => console.log("Redis Client Error", err));
+    this.client.on("error", (err) => console.log("Redis Client Error", err));
 
-    await redisClient.connect();
+    await this.client.connect();
 
     console.log("Connected to Redis");
-  } catch (error) {
-    console.error("Failed to connect to Redis:", error);
-    process.exit(1);
   }
-};
 
-export { redisClient, redisConnect };
+  async get(key) {
+    console.log(key, "key");
+    return await this.client.get(key);
+  }
+
+  async set(key, value, options) {
+    return await this.client.set(key, value, options);
+  }
+
+  async del(key) {
+    return await this.client.del(key);
+  }
+}
+
+const redisClient = new RedisClient();
+
+export { redisClient };

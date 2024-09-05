@@ -4,6 +4,7 @@ import { passportAuth } from "./jwt.middleware.js";
 import * as firebaseConfig from "./firebase.config.js";
 import multerUpload from "./multer.config.js";
 import * as swaggerConfig from "./swagger.config.js";
+import * as redisConfig from "./redis.config.js";
 
 export {
   serverConfig,
@@ -12,4 +13,5 @@ export {
   firebaseConfig,
   multerUpload,
   swaggerConfig,
+  redisConfig,
 };

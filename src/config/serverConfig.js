@@ -7,6 +7,7 @@ export const serverConfig = {
   SALT: bcrypt.genSaltSync(10),
   DATABASE_URL: process.env.DATABASE_URL,
   DATABASE_URL_REPLICA: process.env.DATABASE_URL_REPLICA,
+  REDIS_URL: process.env.REDIS_URL,
   JWT_KEY: process.env.JWT_KEY,
   FIREBASE_API_KEY: process.env.FIREBASE_API_KEY,
   FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN,

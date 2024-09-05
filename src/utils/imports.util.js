@@ -15,6 +15,7 @@ import passport from "passport";
 import multer from "multer";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import redis from "redis";
 
 export {
   mongoose,
@@ -34,4 +35,5 @@ export {
   multer,
   swaggerJsdoc,
   swaggerUi,
+  redis,
 };

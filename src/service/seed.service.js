@@ -1,11 +1,9 @@
 import { faker } from "@faker-js/faker";
-import User from "../models/user.model.js";
-import Tweet from "../models/tweet.model.js";
-import Hashtag from "../models/hashtag.model.js";
-import Comment from "../models/comment.model.js";
-import Like from "../models/like.model.js";
+import { User, Tweet, Hashtag, Comment, Like } from "../models/index.js";
 import { ServiceError, DatabaseError } from "../error/custom.error.js";
 import { responseCodes, mongoose } from "../utils/imports.util.js";
+import { serverConfig } from "../config/serverConfig.js";
+
 const { StatusCodes } = responseCodes;
 
 class SeedService {
@@ -17,17 +15,24 @@ class SeedService {
   }
 
   async seedData(count = 10) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const useTransaction = !!serverConfig.DATABASE_URL_REPLICA;
+    let session;
 
     try {
+      if (useTransaction) {
+        session = await mongoose.startSession();
+        session.startTransaction();
+      }
+
       const users = await this.seedUsers(count, session);
       const hashtags = await this.seedHashtags(Math.floor(count / 2), session);
       const tweets = await this.seedTweets(count * 2, users, hashtags, session);
       await this.seedComments(count * 3, users, tweets, session);
       await this.seedLikes(count * 5, users, tweets, session);
 
-      await session.commitTransaction();
+      if (useTransaction) {
+        await session.commitTransaction();
+      }
 
       return {
         users: users.length,
@@ -37,7 +42,9 @@ class SeedService {
         likes: count * 5,
       };
     } catch (error) {
-      await session.abortTransaction();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+      }
       if (error instanceof DatabaseError) {
         throw new ServiceError(
           "Seeding failed",
@@ -51,7 +58,9 @@ class SeedService {
         StatusCodes.INTERNAL_SERVER_ERROR
       );
     } finally {
-      session.endSession();
+      if (session) {
+        session.endSession();
+      }
     }
   }
 
@@ -84,9 +93,11 @@ class SeedService {
       while (hashtags.length < count && attempts < maxAttempts) {
         const title = faker.word.sample().toLowerCase();
 
-        const existingHashtag = await Hashtag.findOne({ title })
-          .session(session)
-          .read("primary"); // Ensure primary read preference
+        const query = Hashtag.findOne({ title });
+        if (session) {
+          query.session(session).read("primary");
+        }
+        const existingHashtag = await query;
 
         if (!existingHashtag) {
           const hashtag = new Hashtag({ title });
@@ -151,11 +162,15 @@ class SeedService {
         });
         await comment.save({ session });
 
-        await Tweet.findByIdAndUpdate(
+        const query = Tweet.findByIdAndUpdate(
           tweet._id,
           { $inc: { countOfComments: 1 } },
-          { session, new: true }
-        ).read("primary"); // Ensure primary read preference
+          { new: true }
+        );
+        if (session) {
+          query.session(session).read("primary");
+        }
+        await query;
       }
     } catch (error) {
       throw new DatabaseError({
@@ -176,11 +191,15 @@ class SeedService {
         });
         await like.save({ session });
 
-        await Tweet.findByIdAndUpdate(
+        const query = Tweet.findByIdAndUpdate(
           tweet._id,
           { $inc: { countOfLikes: 1 } },
-          { session, new: true }
-        ).read("primary"); // Ensure primary read preference
+          { new: true }
+        );
+        if (session) {
+          query.session(session).read("primary");
+        }
+        await query;
       }
     } catch (error) {
       throw new DatabaseError({

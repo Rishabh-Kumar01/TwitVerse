@@ -37,7 +37,7 @@ class TweetRepository extends CrudRepository {
 
   async getTweets() {
     try {
-      return await Tweet.find().read("secondary");
+      return await Tweet.find().sort({ createdAt: -1 }).read("secondary");
     } catch (error) {
       throw new DatabaseError(error);
     }

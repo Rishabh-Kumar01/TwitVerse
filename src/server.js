@@ -11,9 +11,11 @@ import {
   serverConfig,
   dbConnect,
   passportAuth,
+  swaggerConfig,
 } from "./config/index.config.js";
 import routes from "./route/index.route.js";
-import { swaggerUi, specs } from "./swagger/swagger.js";
+
+const { swaggerUi, specs } = swaggerConfig;
 
 const app = express();
 

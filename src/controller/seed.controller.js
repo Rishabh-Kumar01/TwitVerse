@@ -8,7 +8,7 @@ const seedService = SeedService.getInstance();
 /**
  * @swagger
  * /v1/seed:
- *   post:
+ *   get:
  *     summary: Seed the database with sample data
  *     tags: [Seed]
  *     parameters:

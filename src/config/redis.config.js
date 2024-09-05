@@ -21,7 +21,6 @@ class RedisClient {
   }
 
   async get(key) {
-    console.log(key, "key");
     return await this.client.get(key);
   }
 

@@ -81,11 +81,13 @@ const signUp = async (req, res, next) => {
 const logIn = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const token = await userService.logIn(email, password);
+    const jwtToken = await userService.logIn(email, password);
     res.status(StatusCodes.OK).json({
       message: "User logged in successfully",
       success: true,
-      data: token,
+      data: {
+        token: jwtToken,
+      },
     });
   } catch (error) {
     next(error);

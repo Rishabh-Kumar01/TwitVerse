@@ -17,9 +17,9 @@ class UserService {
     return UserService.instance;
   }
 
-  async #createToken(user) {
+  async #createToken(user, expireTime) {
     try {
-      return jwt.sign(user, serverConfig.JWT_KEY, { expiresIn: "24h" });
+      return jwt.sign(user, serverConfig.JWT_KEY, { expiresIn: expireTime });
     } catch (error) {
       throw new ServiceError(
         "Token creation failed",
@@ -62,6 +62,14 @@ class UserService {
         );
       }
 
+      const jwtToken = await this.#createToken(
+        {
+          userId: user._id,
+          email: user.email,
+        },
+        "5m"
+      );
+
       // Publish user created event to Kafka
       await kafkaConfig.sendOtpRequest("otp-notifications", {
         type: "SEND_OTP",
@@ -77,6 +85,7 @@ class UserService {
         userId: user._id,
         name: user.name,
         email: user.email,
+        token: jwtToken,
       };
     } catch (error) {
       if (error instanceof DatabaseError) {
@@ -122,10 +131,13 @@ class UserService {
         );
       }
 
-      const token = await this.#createToken({
-        userId: user._id,
-        email: user.email,
-      });
+      const token = await this.#createToken(
+        {
+          userId: user._id,
+          email: user.email,
+        },
+        "24h"
+      );
 
       return token;
     } catch (error) {

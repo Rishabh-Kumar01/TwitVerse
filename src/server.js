@@ -13,6 +13,8 @@ import {
   passportAuth,
   swaggerConfig,
   redisClient,
+  kafkaConfig,
+  initializeKafkaTopics,
 } from "./config/index.config.js";
 import routes from "./route/index.route.js";
 
@@ -26,6 +28,10 @@ const serverStart = async () => {
 
   // Redis Connection
   await redisClient.connect();
+
+  // Kafka Initialization
+  await connectProducer();
+  await initializeKafkaTopics();
 
   // Middlewares
   try {

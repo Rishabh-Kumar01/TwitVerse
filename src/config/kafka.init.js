@@ -5,7 +5,7 @@ import { responseCodes } from "../utils/imports.util.js";
 const { StatusCodes } = responseCodes;
 
 const requiredTopics = [
-  { name: "otp-requests", partitions: 3, replicationFactor: 1 },
+  { name: "otp-notifications", partitions: 3, replicationFactor: 1 },
 ];
 
 const initializeKafkaTopics = async () => {

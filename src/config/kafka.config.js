@@ -1,16 +1,18 @@
 import { serverConfig } from "./serverConfig.js";
 import { ServiceError } from "../error/custom.error.js";
-import { responseCodes, kafka } from "../utils/imports.util.js";
+import { responseCodes, kafkaImport } from "../utils/imports.util.js";
 
 const { StatusCodes } = responseCodes;
-const { Kafka } = kafka;
+const { Kafka, logLevel } = kafkaImport;
 
 const kafka = new Kafka({
   clientId: "twitverse",
   brokers: [serverConfig.KAFKA_BROKER],
+  logLevel: logLevel.DEBUG,
 });
 
 const producer = kafka.producer();
+const admin = kafka.admin();
 
 export const connectProducer = async () => {
   try {
@@ -53,7 +55,11 @@ export const createTopic = async (
   replicationFactor = 1
 ) => {
   try {
+    console.log("Connecting admin for creating topic...");
     await admin.connect();
+    console.log("Admin Connection Success for creating topic");
+
+    console.log("Creating topic: ", topic);
     await admin.createTopics({
       topics: [
         {
@@ -72,6 +78,7 @@ export const createTopic = async (
       StatusCodes.INTERNAL_SERVER_ERROR
     );
   } finally {
+    console.log("Disconnecting admin connection after creating topic...");
     await admin.disconnect();
   }
 };

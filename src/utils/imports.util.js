@@ -16,7 +16,7 @@ import multer from "multer";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import redis from "redis";
-import kafka from "kafkajs";
+import kafkaImport from "kafkajs";
 
 export {
   mongoose,
@@ -37,5 +37,5 @@ export {
   swaggerJsdoc,
   swaggerUi,
   redis,
-  kafka,
+  kafkaImport,
 };

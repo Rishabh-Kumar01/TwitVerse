@@ -30,8 +30,8 @@ const serverStart = async () => {
   await redisClient.connect();
 
   // Kafka Initialization
-  await connectProducer();
-  await initializeKafkaTopics();
+  await kafkaConfig.connectProducer();
+  // await initializeKafkaTopics();
 
   // Middlewares
   try {

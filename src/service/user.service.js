@@ -123,7 +123,7 @@ class UserService {
       }
 
       const token = await this.#createToken({
-        id: user.id,
+        userId: user._id,
         email: user.email,
       });
 

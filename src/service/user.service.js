@@ -1,7 +1,7 @@
 import { UserRepository } from "../repository/index.repository.js";
 import { ServiceError, DatabaseError } from "../error/custom.error.js";
 import { jwt, bcrypt, responseCodes } from "../utils/imports.util.js";
-import { serverConfig } from "../config/serverConfig.js";
+import { serverConfig, kafkaConfig } from "../config/index.config.js";
 
 const { StatusCodes } = responseCodes;
 
@@ -53,6 +53,26 @@ class UserService {
       }
 
       const user = await this.userRepository.create(userData);
+
+      if (!user) {
+        throw new ServiceError(
+          "User creation failed",
+          "An error occurred while creating the user",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+
+      // Publish user created event to Kafka
+      await kafkaConfig.sendOtpRequest("otp-notifications", {
+        type: "SEND_OTP",
+        data: {
+          userId: user._id,
+          email: user.email,
+          action: "TWO_FACTOR_AUTH",
+          timestamp: new Date().toISOString(),
+        },
+      });
+
       return {
         userId: user._id,
         name: user.name,

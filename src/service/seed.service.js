@@ -1,5 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { User, Tweet, Hashtag, Comment, Like } from "../models/index.js";
+import {
+  User,
+  Tweet,
+  Hashtag,
+  Comment,
+  Like,
+  Follow,
+} from "../models/index.js";
 import { ServiceError, DatabaseError } from "../error/custom.error.js";
 import { responseCodes, mongoose } from "../utils/imports.util.js";
 import { serverConfig } from "../config/serverConfig.js";
@@ -21,6 +28,9 @@ class SeedService {
     let session;
 
     try {
+      // Clean up before seeding
+      await this.cleanup();
+
       if (useTransaction) {
         session = await mongoose.startSession();
         session.startTransaction();
@@ -31,6 +41,7 @@ class SeedService {
       const tweets = await this.seedTweets(count * 2, users, hashtags, session);
       await this.seedComments(count * 3, users, tweets, session);
       await this.seedLikes(count * 5, users, tweets, session);
+      await this.seedFollows(users, session);
 
       if (useTransaction) {
         await session.commitTransaction();
@@ -69,6 +80,51 @@ class SeedService {
     }
   }
 
+  async cleanup() {
+    try {
+      // Drop all collections
+      const collections = Object.values(mongoose.connection.collections);
+      for (const collection of collections) {
+        await collection.drop();
+      }
+      console.log("All collections dropped successfully");
+
+      // Clear seeded_users.json file if it exists
+      const publicFolderPath = path.join(process.cwd(), "public");
+      const filePath = path.join(publicFolderPath, "seeded_users.json");
+
+      try {
+        // Check if the public folder exists
+        await fs.access(publicFolderPath);
+
+        // Check if the file exists
+        await fs.access(filePath);
+
+        // If we reach here, both folder and file exist, so delete the file
+        await fs.unlink(filePath);
+        console.log("seeded_users.json file deleted successfully");
+      } catch (error) {
+        if (error.code === "ENOENT") {
+          // ENOENT means file or folder doesn't exist, which is fine
+          console.log(
+            "seeded_users.json file or public folder does not exist, skipping deletion"
+          );
+        } else {
+          console.error(
+            "Error checking or deleting seeded_users.json file:",
+            error
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error during cleanup:", error);
+      throw new DatabaseError({
+        explanation: "Failed to cleanup before seeding",
+        message: error.message,
+      });
+    }
+  }
+
   async seedUsers(count, session) {
     try {
       const users = [];
@@ -86,6 +142,45 @@ class SeedService {
     } catch (error) {
       throw new DatabaseError({
         explanation: "Failed to seed users",
+        message: error.message,
+      });
+    }
+  }
+
+  async seedFollows(users, session) {
+    try {
+      const followPromises = users.map(async (user) => {
+        const maxFollows = users.length - 1; // Maximum is all other users
+        const numToFollow = faker.number.int({ min: 1, max: maxFollows });
+        const usersToFollow = faker.helpers.arrayElements(
+          users.filter((u) => u._id.toString() !== user._id.toString()),
+          numToFollow
+        );
+
+        for (const userToFollow of usersToFollow) {
+          const follow = new Follow({
+            follower: user._id,
+            followed: userToFollow._id,
+          });
+          await follow.save({ session });
+
+          await User.findByIdAndUpdate(
+            user._id,
+            { $inc: { followings: 1 } },
+            { session, new: true }
+          );
+          await User.findByIdAndUpdate(
+            userToFollow._id,
+            { $inc: { followers: 1 } },
+            { session, new: true }
+          );
+        }
+      });
+
+      await Promise.all(followPromises);
+    } catch (error) {
+      throw new DatabaseError({
+        explanation: "Failed to seed follow relationships",
         message: error.message,
       });
     }

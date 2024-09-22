@@ -128,3 +128,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Ignore everything in the public folder
+public/*
+
+# Except for the .gitkeep file
+!public/.gitkeep

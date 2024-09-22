@@ -21,11 +21,11 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    followersCount: {
+    followers: {
       type: Number,
       default: 0,
     },
-    followingCount: {
+    followings: {
       type: Number,
       default: 0,
     },

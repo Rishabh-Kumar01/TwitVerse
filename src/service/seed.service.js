@@ -3,6 +3,8 @@ import { User, Tweet, Hashtag, Comment, Like } from "../models/index.js";
 import { ServiceError, DatabaseError } from "../error/custom.error.js";
 import { responseCodes, mongoose } from "../utils/imports.util.js";
 import { serverConfig } from "../config/serverConfig.js";
+import fs from "fs/promises";
+import path from "path";
 
 const { StatusCodes } = responseCodes;
 
@@ -33,6 +35,9 @@ class SeedService {
       if (useTransaction) {
         await session.commitTransaction();
       }
+
+      // Write user details to a file
+      await this.writeUserDetailsToFile(users);
 
       return {
         users: users.length,
@@ -68,12 +73,14 @@ class SeedService {
     try {
       const users = [];
       for (let i = 0; i < count; i++) {
+        const password = faker.internet.password();
         const user = new User({
           name: faker.person.fullName(),
           email: faker.internet.email(),
-          password: faker.internet.password(),
+          password: password,
         });
-        users.push(await user.save({ session }));
+        const savedUser = await user.save({ session });
+        users.push({ ...savedUser.toObject(), unencryptedPassword: password });
       }
       return users;
     } catch (error) {
@@ -81,6 +88,29 @@ class SeedService {
         explanation: "Failed to seed users",
         message: error.message,
       });
+    }
+  }
+
+  async writeUserDetailsToFile(users) {
+    try {
+      const userDetails = users.map((user) => ({
+        name: user.name,
+        email: user.email,
+        password: user.unencryptedPassword,
+      }));
+
+      const fileContent = JSON.stringify(userDetails, null, 2);
+      const publicFolderPath = path.join(process.cwd(), "public");
+      const filePath = path.join(publicFolderPath, "seeded_users.json");
+
+      // Create the public folder if it doesn't exist
+      await fs.mkdir(publicFolderPath, { recursive: true });
+
+      // Write the file
+      await fs.writeFile(filePath, fileContent, "utf8");
+      console.log(`User details written to ${filePath}`);
+    } catch (error) {
+      console.error("Failed to write user details to file:", error);
     }
   }
 

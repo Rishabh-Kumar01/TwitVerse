@@ -36,6 +36,7 @@ const serverStart = async () => {
 
   // Middlewares
   try {
+    app.use(express.static("public"));
     app.use(compression());
     app.use(cors());
     app.use(helmet());

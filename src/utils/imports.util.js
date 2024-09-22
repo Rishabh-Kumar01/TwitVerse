@@ -17,6 +17,7 @@ import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import redis from "redis";
 import kafkaImport from "kafkajs";
+import chalk from "chalk";
 
 export {
   mongoose,
@@ -38,4 +39,5 @@ export {
   swaggerUi,
   redis,
   kafkaImport,
+  chalk,
 };

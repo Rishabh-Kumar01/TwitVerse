@@ -21,24 +21,20 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    followersCount: {
+      type: Number,
+      default: 0,
+    },
+    followingCount: {
+      type: Number,
+      default: 0,
+    },
     // profilePic: {
     //   type: String,
     // },
     // coverPic: {
     //   type: String,
     // },
-    // followers: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "User",
-    //   },
-    // ],
-    // followings: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "User",
-    //   },
-    // ],
   },
   { timestamps: true }
 );

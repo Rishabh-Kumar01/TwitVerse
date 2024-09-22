@@ -17,6 +17,7 @@ import {
   initializeKafkaTopics,
 } from "./config/index.config.js";
 import routes from "./route/index.route.js";
+import { customMorgan } from "./middleware/index.middleware.js";
 
 const { swaggerUi, specs } = swaggerConfig;
 
@@ -38,7 +39,7 @@ const serverStart = async () => {
     app.use(compression());
     app.use(cors());
     app.use(helmet());
-    app.use(morgan("dev"));
+    app.use(customMorgan);
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 

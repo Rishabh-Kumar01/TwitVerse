@@ -3,5 +3,6 @@ import Hashtag from "./hashtag.model.js";
 import Comment from "./comment.model.js";
 import Like from "./like.model.js";
 import User from "./user.model.js";
+import Follow from "./follow.model.js";
 
-export { Tweet, Hashtag, Comment, Like, User };
+export { Tweet, Hashtag, Comment, Like, User, Follow };

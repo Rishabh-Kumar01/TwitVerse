@@ -1,4 +1,7 @@
-import { UserRepository } from "../repository/index.repository.js";
+import {
+  UserRepository,
+  FollowRepository,
+} from "../repository/index.repository.js";
 import { ServiceError, DatabaseError } from "../error/custom.error.js";
 import { jwt, bcrypt, responseCodes } from "../utils/imports.util.js";
 import { serverConfig, kafkaConfig } from "../config/index.config.js";
@@ -8,6 +11,7 @@ const { StatusCodes } = responseCodes;
 class UserService {
   constructor() {
     this.userRepository = UserRepository.getInstance();
+    this.followRepository = FollowRepository.getInstance();
   }
 
   static getInstance() {
@@ -147,6 +151,163 @@ class UserService {
       throw new ServiceError(
         "Login failed",
         "An error occurred during the login process",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async followUser(followerId, followedId) {
+    try {
+      if (followerId === followedId) {
+        throw new ServiceError(
+          "Invalid operation",
+          "A user cannot follow themselves",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+
+      const follower = await this.userRepository.getById({
+        _id: followerId,
+      });
+      const followed = await this.userRepository.getById({
+        _id: followedId,
+      });
+      console.log(follower, followed, "Follower and Followed");
+
+      if (!follower || !followed) {
+        throw new ServiceError(
+          "User not found",
+          "One or both users do not exist",
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      const existingFollow = await this.followRepository.getFollow(
+        followerId,
+        followedId
+      );
+      if (existingFollow) {
+        throw new ServiceError(
+          "Already following",
+          "The user is already following this account",
+          StatusCodes.CONFLICT
+        );
+      }
+
+      await this.followRepository.create({
+        follower: followerId,
+        followed: followedId,
+      });
+      await this.userRepository.incrementFollowCount(followerId, "following");
+      await this.userRepository.incrementFollowCount(followedId, "followers");
+
+      return { message: "Successfully followed the user" };
+    } catch (error) {
+      console.log(error, "Error in followUser");
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Follow operation failed",
+        "An error occurred while following the user",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async unfollowUser(followerId, followedId) {
+    try {
+      if (followerId === followedId) {
+        throw new ServiceError(
+          "Invalid operation",
+          "A user cannot unfollow themselves",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+
+      const follower = await this.userRepository.getById({ _id: followerId });
+      const followed = await this.userRepository.getById({ _id: followedId });
+
+      if (!follower || !followed) {
+        throw new ServiceError(
+          "User not found",
+          "One or both users do not exist",
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      const existingFollow = await this.followRepository.getFollow(
+        followerId,
+        followedId
+      );
+      if (!existingFollow) {
+        throw new ServiceError(
+          "Not following",
+          "The user is not following this account",
+          StatusCodes.CONFLICT
+        );
+      }
+
+      await this.followRepository.delete(existingFollow._id);
+      await this.userRepository.decrementFollowCount(followerId, "following");
+      await this.userRepository.decrementFollowCount(followedId, "followers");
+
+      return { message: "Successfully unfollowed the user" };
+    } catch (error) {
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Unfollow operation failed",
+        "An error occurred while unfollowing the user",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async getUserFollowers(userId) {
+    try {
+      const user = await this.userRepository.getById({ _id: userId });
+      if (!user) {
+        throw new ServiceError(
+          "User not found",
+          "The specified user does not exist",
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      return await this.followRepository.getFollowers(userId);
+    } catch (error) {
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Retrieval failed",
+        "An error occurred while retrieving user followers",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async getUserFollowing(userId) {
+    try {
+      const user = await this.userRepository.getById({ _id: userId });
+      if (!user) {
+        throw new ServiceError(
+          "User not found",
+          "The specified user does not exist",
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      return await this.followRepository.getFollowing(userId);
+    } catch (error) {
+      if (error instanceof ServiceError) {
+        throw error;
+      }
+      throw new ServiceError(
+        "Retrieval failed",
+        "An error occurred while retrieving users followed by the user",
         StatusCodes.INTERNAL_SERVER_ERROR
       );
     }

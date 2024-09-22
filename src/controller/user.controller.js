@@ -94,4 +94,69 @@ const logIn = async (req, res, next) => {
   }
 };
 
-export { signUp, logIn };
+const followUser = async (req, res, next) => {
+  try {
+    const followerId = req.user.id;
+    const followedId = req.params.id;
+    const result = await userService.followUser(followerId, followedId);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "User followed successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const unfollowUser = async (req, res, next) => {
+  try {
+    const followerId = req.user.id;
+    const followedId = req.params.id;
+    const result = await userService.unfollowUser(followerId, followedId);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "User unfollowed successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getUserFollowers = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const followers = await userService.getUserFollowers(userId);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "User followers retrieved successfully",
+      data: followers,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getUserFollowing = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const following = await userService.getUserFollowing(userId);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "User following retrieved successfully",
+      data: following,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  signUp,
+  logIn,
+  followUser,
+  unfollowUser,
+  getUserFollowers,
+  getUserFollowing,
+};

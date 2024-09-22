@@ -26,6 +26,30 @@ class UserRepository extends CrudRepository {
       throw new DatabaseError(error);
     }
   }
+
+  async incrementFollowCount(userId, field) {
+    try {
+      return await User.findByIdAndUpdate(
+        userId,
+        { $inc: { [`${field}Count`]: 1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
+  }
+
+  async decrementFollowCount(userId, field) {
+    try {
+      return await User.findByIdAndUpdate(
+        userId,
+        { $inc: { [`${field}Count`]: -1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
+  }
 }
 
 export default UserRepository;

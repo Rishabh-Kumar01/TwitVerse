@@ -11,6 +11,8 @@ import { multerUpload } from "../../config/index.config.js";
 
 const router = express.Router();
 
+// Seed Endpoints
+
 /**
  * @swagger
  * tags:
@@ -37,6 +39,8 @@ const router = express.Router();
  *         description: Database seeded successfully
  */
 router.get("/seed", SeedController.seedData);
+
+// Tweet Endpoints
 
 /**
  * @swagger
@@ -157,6 +161,8 @@ router.delete("/tweets/:id", authenticate, TweetController.deleteTweet);
  */
 router.post("/signup", UserController.signUp);
 
+// User Endpoints
+
 /**
  * @swagger
  * /api/v1/login:
@@ -251,5 +257,89 @@ router.post("/comments", authenticate, CommentController.createComment);
  *         description: Comment retrieved successfully
  */
 router.get("/comments/:id", CommentController.getComment);
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/follow:
+ *   post:
+ *     summary: Follow a user
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully followed the user
+ */
+router.post("/users/:id/follow", authenticate, UserController.followUser);
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/unfollow:
+ *   post:
+ *     summary: Unfollow a user
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully unfollowed the user
+ */
+router.post("/users/:id/unfollow", authenticate, UserController.unfollowUser);
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/followers:
+ *   get:
+ *     summary: Get user's followers
+ *     tags: [User]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of user's followers
+ */
+router.get(
+  "/users/:id/followers",
+  authenticate,
+  UserController.getUserFollowers
+);
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/following:
+ *   get:
+ *     summary: Get users that the user is following
+ *     tags: [User]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of users that the user is following
+ */
+router.get(
+  "/users/:id/following",
+  authenticate,
+  UserController.getUserFollowing
+);
 
 export default router;
